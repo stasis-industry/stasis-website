@@ -2,6 +2,7 @@
 import Layout from './Layout.astro';
 import Header from '../components/Header.astro';
 import Search from "astro-pagefind/components/Search";
+import 'katex/dist/katex.min.css';
 
 interface Props {
   title: string;
@@ -225,7 +226,37 @@ const nextPage = currentIndex !== -1 && currentIndex < flatItems.length - 1 ? fl
       }));
     }
 
-    // 3. Inject Copy Buttons in Code Blocks
+    // 3. Wrap tables for horizontal scroll
+    const tables = document.querySelectorAll('.prose-container table');
+    tables.forEach(table => {
+      if (table.parentElement.classList.contains('table-wrapper')) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+
+    // 4. Transform [!TYPE] blockquotes into callouts
+    const calloutTypes = {
+      NOTE: { icon: 'ℹ', label: 'Note' },
+      TIP: { icon: '💡', label: 'Tip' },
+      WARNING: { icon: '⚠', label: 'Warning' },
+      IMPORTANT: { icon: '❗', label: 'Important' },
+    };
+    const blockquotes = document.querySelectorAll('.prose-container blockquote');
+    blockquotes.forEach(bq => {
+      const firstP = bq.querySelector('p');
+      if (!firstP) return;
+      const text = firstP.innerHTML;
+      const match = text.match(/^\[!(NOTE|TIP|WARNING|IMPORTANT)\]\s*/);
+      if (!match) return;
+      const type = match[1];
+      const info = calloutTypes[type];
+      bq.classList.add('callout', 'callout-' + type.toLowerCase());
+      firstP.innerHTML = '<span class="callout-title"><span class="callout-icon">' + info.icon + '</span> ' + info.label + '</span>' + text.slice(match[0].length);
+    });
+
+    // 5. Inject Copy Buttons in Code Blocks
     const codeBlocks = document.querySelectorAll('.astro-code');
     codeBlocks.forEach(block => {
       // Avoid adding multiple buttons
@@ -764,6 +795,191 @@ const nextPage = currentIndex !== -1 && currentIndex < flatItems.length - 1 ? fl
   
   .toc-item.depth-3 {
     padding-left: 12px;
+  }
+
+  /* ─── Tables ─── */
+  .prose-container :global(.table-wrapper) {
+    overflow-x: auto;
+    margin: 32px 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .prose-container :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .prose-container :global(thead th) {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    background: var(--surface);
+    color: var(--dark);
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .prose-container :global(tbody td) {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  .prose-container :global(tbody tr:last-child td) {
+    border-bottom: none;
+  }
+
+  .prose-container :global(tbody tr:nth-child(even)) {
+    background: rgba(128, 128, 128, 0.03);
+  }
+
+  :global(html.dark) .prose-container :global(thead th) {
+    background: #1a1a1a;
+  }
+
+  :global(html.dark) .prose-container :global(tbody tr:nth-child(even)) {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  /* ─── Callouts ─── */
+  .prose-container :global(.callout) {
+    border-left-width: 4px;
+    border-left-style: solid;
+    border-radius: 0 6px 6px 0;
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-style: normal;
+  }
+
+  .prose-container :global(.callout p) {
+    font-style: normal;
+    margin-bottom: 8px;
+  }
+
+  .prose-container :global(.callout p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .prose-container :global(.callout-title) {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .prose-container :global(.callout-icon) {
+    margin-right: 4px;
+  }
+
+  .prose-container :global(.callout-note) {
+    border-left-color: #2563EB;
+    background: rgba(37, 99, 235, 0.05);
+  }
+  .prose-container :global(.callout-note .callout-title) {
+    color: #2563EB;
+  }
+
+  .prose-container :global(.callout-tip) {
+    border-left-color: var(--green);
+    background: rgba(4, 120, 87, 0.05);
+  }
+  .prose-container :global(.callout-tip .callout-title) {
+    color: var(--green);
+  }
+
+  .prose-container :global(.callout-warning) {
+    border-left-color: #D97706;
+    background: rgba(217, 119, 6, 0.05);
+  }
+  .prose-container :global(.callout-warning .callout-title) {
+    color: #D97706;
+  }
+
+  .prose-container :global(.callout-important) {
+    border-left-color: var(--red);
+    background: rgba(153, 27, 27, 0.05);
+  }
+  .prose-container :global(.callout-important .callout-title) {
+    color: var(--red);
+  }
+
+  :global(html.dark) .prose-container :global(.callout-note) {
+    background: rgba(37, 99, 235, 0.08);
+  }
+  :global(html.dark) .prose-container :global(.callout-tip) {
+    background: rgba(5, 150, 105, 0.08);
+  }
+  :global(html.dark) .prose-container :global(.callout-warning) {
+    background: rgba(217, 119, 6, 0.08);
+  }
+  :global(html.dark) .prose-container :global(.callout-important) {
+    background: rgba(255, 77, 77, 0.08);
+  }
+
+  /* ─── Links ─── */
+  .prose-container :global(a:not(.page-nav):not(.sidebar-link)) {
+    color: var(--green);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .prose-container :global(a:not(.page-nav):not(.sidebar-link):hover) {
+    border-bottom-color: var(--green);
+  }
+
+  /* ─── Horizontal Rules ─── */
+  .prose-container :global(hr) {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  /* ─── List readability ─── */
+  .prose-container :global(li) {
+    line-height: 1.8;
+  }
+
+  /* ─── Dark mode fixes ─── */
+  :global(html.dark) .prose-container :global(h2) {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  :global(html.dark) .prose-container :global(blockquote:not(.callout)) {
+    border-left-color: var(--dark);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  :global(html.dark) .lead-desc {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  :global(html.dark) .page-nav:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* ─── KaTeX Math ─── */
+  .prose-container :global(.katex-display) {
+    overflow-x: auto;
+    padding: 8px 0;
+    margin: 24px 0;
+  }
+
+  .prose-container :global(.katex) {
+    font-size: 1.05em;
   }
 </style>
 
