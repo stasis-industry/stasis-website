@@ -1,62 +1,46 @@
 ---
 title: Simulation Phases
-description: The two-phase simulation model — Warmup followed by Fault Injection — and how MAFIS uses the warmup baseline to compute quantitative resilience deltas.
+description: The dual-twin simulation model — a headless fault-free baseline computed instantly, then a live fault injection run measured against it.
 ---
 
-Every MAFIS simulation run has two automatic phases: **Warmup** then **Fault Injection**. The phases are not manual toggles — they are the default run structure. The warmup baseline is what makes resilience metrics quantitative rather than absolute.
+MAFIS uses a **dual-twin model**: a headless fault-free baseline is computed first, then the live simulation runs with faults active from tick 1. All resilience metrics are computed as deviations between the two. This is what makes measurements quantitative — not absolute.
 
-## Phase 1: Warmup
+## Phase 1: Headless Baseline
 
-During warmup, faults are suppressed. The simulation runs lifelong PIBT with agents continuously receiving new tasks, building up a stable operating profile. At the end of the warmup window, three baseline values are captured:
+Before the visible simulation starts, MAFIS runs a **deterministic fault-free simulation** headlessly — pure Rust, no rendering, no ECS overhead. This baseline uses the same seed, topology, solver, and scheduler as the live run. The only difference: faults are disabled.
 
-| Baseline field | Description |
+The baseline runs instantly (or near-instantly) and produces per-tick reference data:
+
+| Baseline data | Description |
 |---|---|
-| `baseline_throughput` | Goals completed per tick (sliding window average) |
-| `baseline_idle_ratio` | Fraction of ticks agents spend waiting rather than moving |
-| `baseline_avg_task_duration` | Average ticks per completed task |
+| Throughput per tick | Goals completed at each tick with no faults |
+| Cumulative tasks | Running total of completed tasks |
+| Idle counts | Wait actions per tick |
 
-The default warmup window is **200 ticks**, configurable via the warmup duration slider in the configuration panel.
-
-> [!NOTE] During warmup, no faults fire and no fault metrics are computed. The header shows progress: `WARMUP (84/200)`.
-
+> [!IMPORTANT] The baseline matches the live simulation **bit-for-bit** until the first fault fires. This is guaranteed by deterministic seeding and shared core functions. The deviation after a fault is the core research output.
 
 ## Phase 2: Fault Injection
 
-Once warmup completes, faults activate automatically. All configured fault sources become active (heat accumulation, automatic breakdown probability, or manual injection). The phase continues until the simulation is stopped or a task limit is reached.
+The live simulation starts immediately with faults enabled. There is no warmup period — fault injection is active from tick 1. The configured fault sources are active from the start: heat accumulation, automatic breakdown probability, scheduled fault scenarios, and manual injection.
 
-The header transitions to: `FAULTS ACTIVE (tick 312)`.
+> [!IMPORTANT] All resilience metrics are computed as **deviations from the headless baseline** at each tick. The deviation can be negative (fault degraded performance) or positive (fault improved performance by relieving over-saturation — Braess's paradox).
 
-> [!IMPORTANT] All resilience metrics — robustness, recoverability, adaptability, degradation slope — are computed as **deltas from the warmup baseline**. A throughput reading of 1.8 goals/tick only means something relative to a baseline of 2.4 goals/tick.
+## Baseline Differential Tracking
 
-## SimulationPhase Resource
+During the live run, MAFIS tracks the gap between live and baseline at every tick:
 
-The current phase is tracked in the `SimulationPhase` enum:
+| Differential metric | What it shows |
+|---|---|
+| Throughput delta | Live throughput − baseline throughput at same tick |
+| Tasks delta | Cumulative tasks completed gap |
+| Deficit integral | Accumulated throughput shortfall over time |
+| Surplus integral | Accumulated throughput surplus (Braess's paradox) |
+| Recovery tick | First tick where live throughput exceeds baseline |
 
-```rust
-pub enum SimulationPhase {
-    Warmup,
-    FaultInjection,
-}
-```
+## Why This Model
 
-Systems that should only run during fault injection gate on `phase == FaultInjection`. The tick history recording system, for example, only records during fault injection — warmup ticks are baseline-only and not worth rewinding to.
+The dual-twin model replaced an earlier warmup-based approach. The advantage: the baseline is computed once, instantly, and is available from tick 1. There is no "warm up and wait" — the researcher sees fault impact immediately.
 
-## ResilienceBaseline Resource
+The question is never "what is the throughput?" in isolation — it is "how much does throughput deviate from what it would have been without faults, under this (scheduler, topology, fault intensity) configuration?"
 
-```rust
-pub struct ResilienceBaseline {
-    pub baseline_throughput: f64,
-    pub baseline_idle_ratio: f64,
-    pub baseline_avg_task_duration: f64,
-    pub warmup_ticks: u64,       // configurable, default 200
-    pub warmup_complete: bool,
-}
-```
-
-## Research Implications
-
-The two-phase structure is what enables **comparative research**. The question is never "what is the throughput?" in isolation — it is "how much does throughput drop, and for how long, relative to the no-fault baseline, under this (scheduler, topology, fault intensity) configuration?"
-
-Different configurations can have identical fault-phase throughput but very different baselines, which produces completely different resilience profiles. The warmup phase makes this comparison rigorous.
-
-See [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard) for the four metrics computed from the baseline delta.
+See [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard) for the four metrics computed from the baseline differential.

@@ -1,85 +1,71 @@
 ---
 title: Scenarios & Configuration
-description: How to configure a MAFIS simulation run — LifelongConfig, SeededRng, task limits, scheduler selection, warmup duration, and grid topology.
+description: How to configure a MAFIS simulation run — topology selection, agent count, fault intensity, scheduler, and deterministic seeding.
 ---
 
-A MAFIS simulation run is defined by a combination of configuration parameters set before starting. These parameters determine the grid topology, agent count, fault intensity, scheduler strategy, and warmup duration. All randomness is controlled by `SeededRng`, ensuring that any run can be reproduced exactly by reusing the same seed.
+A MAFIS simulation run is defined by a combination of configuration parameters set before starting. All randomness is controlled by `SeededRng`, ensuring that any run can be reproduced exactly by reusing the same seed.
 
-## SeededRng
+## Deterministic Seeding
 
-All randomness in MAFIS flows through a single `SeededRng` resource:
+All randomness in MAFIS flows through a single seeded random number generator (ChaCha8). The seed controls:
 
-```rust
-#[derive(Resource)]
-pub struct SeededRng {
-    pub seed: u64,
-    pub rng: ChaCha8Rng,
-}
-```
+- Topology obstacle placement
+- Initial agent positions
+- Task assignment (scheduler decisions)
+- Fault probability rolls
 
-`SeededRng` is used for:
-- Grid obstacle generation (random maps)
-- Initial agent placement
-- `RandomScheduler` task assignment
-- `breakdown_probability` rolls
-
-> [!TIP] With the same seed and configuration, two runs produce identical fault events at identical ticks with identical cascade consequences. This is required for the tick history rewind to be a reliable research tool — the snapshot you rewind to is exactly what happened, not a re-simulation.
-
-## LifelongConfig
-
-Each agent carries a `LifelongConfig` component that controls its task assignment behavior:
-
-```rust
-pub struct LifelongConfig {
-    pub enabled: bool,
-    pub tasks_completed: u64,
-    pub task_limit: Option<u64>,
-    pub needs_replan: bool,
-    pub throughput_window: VecDeque<f64>,
-}
-```
-
-`task_limit` is an optional stop condition. When the total tasks completed across all agents reaches the limit, the simulation transitions to `SimState::Finished`. Setting `task_limit = num_agents` approximates one-shot behavior — each agent completes one task and the simulation ends. This is not the primary use case but is available for controlled experiments.
+> [!TIP] With the same seed and configuration, two runs produce identical fault events at identical ticks with identical cascade consequences. This is required for reproducible research — any result can be independently verified.
 
 ## Configuration Parameters
 
-The following parameters are set in the configuration panel before starting a run:
-
-| Parameter | UI Control | Effect |
+| Parameter | Options | Effect |
 |---|---|---|
-| Agent count | Slider | Number of agents spawned |
-| Grid size | Dropdown | Grid dimensions (width × height) |
-| Obstacle density | Slider | Fraction of cells blocked at generation |
-| Seed | Input | RNG seed for reproducibility |
-| Scheduler | Dropdown | Task assignment strategy (currently: Random) |
-| Task limit | Input (optional) | Stop condition on total tasks completed |
-| Fault intensity | Dropdown | Off / Low / Medium / High (sets FaultConfig presets) |
-| Warmup duration | Slider | Ticks in Warmup phase before fault injection begins (default: 200) |
+| **Topology** | Warehouse S/M/L, Open Floor, Custom | Grid layout and zone definitions |
+| **Agent count** | Slider | Number of agents spawned |
+| **Seed** | Input | RNG seed for reproducibility |
+| **Scheduler** | Random, Closest-first | Task assignment strategy |
+| **Solver** | PIBT, RHCR (3 variants), Token Passing | Path planning algorithm |
+| **Fault intensity** | Off / Low / Medium / High | Fault frequency and severity |
+| **Baseline ticks** | Input (default: configurable) | Duration of headless fault-free baseline |
+| **Task limit** | Optional | Stop condition on total tasks completed |
 
-## Grid Topology
+## Grid Topologies
 
-MAFIS currently generates grids algorithmically using the seed-controlled noise functions. Grid parameters:
+MAFIS provides pre-built topologies that define grid layout, obstacle placement, and **zone maps** (pickup, delivery, and corridor zones for the task scheduler).
 
-- **Random:** Uniform random obstacle placement at the specified density. Simple, reproducible, good for baseline comparisons.
-- **MovingAI import:** Standard `.map` format grids from the MovingAI benchmarks suite (see [MovingAI MAPF Benchmarks](https://movingai.com/benchmarks/mapf.html)) — planned, not yet implemented.
+### Warehouse
+
+Realistic warehouse layouts with storage rows, corridors, cross-aisles, and delivery zones.
+
+| Preset | Size | Suggested agents | Characteristic |
+|---|---|---|---|
+| **Small** | 20 × 12 | 10–30 | Quick experiments, low density |
+| **Medium** | 40 × 21 | 30–100 | Balanced for most research |
+| **Large** | 70 × 33 | 100–300 | Stress testing, cascade analysis |
+
+### Open Floor
+
+An open grid (default 32 × 32) with random obstacles. All zones are open — no pickup/delivery separation. Good for controlled experiments where topology is not a variable.
+
+### Custom
+
+Import custom grid layouts via the map editor. Any grid can be annotated with zones for structured task scheduling.
+
+## Fault Scenarios
+
+Beyond manual fault injection (clicking on agents during a run), MAFIS supports **scheduled fault scenarios** — pre-configured sequences of fault events at specific ticks:
+
+- Kill agent at tick T
+- Place obstacle at position (x, y) at tick T
+- Inject latency for N ticks at tick T
+- Temporary blockage for N ticks at tick T
+
+Scheduled scenarios ensure identical fault conditions across comparison runs with different scheduler or topology configurations.
 
 ## Reproducible Research
 
-To reproduce a published result:
-1. Record the seed, agent count, grid size, obstacle density, scheduler, fault intensity, and warmup duration.
-2. Set all parameters identically in the configuration panel.
-3. The simulation will produce identical fault events at identical ticks.
+To reproduce a result:
 
-The tick history snapshot buffer records the fault phase only, not the warmup phase. Warmup is deterministic from the seed — the snapshot buffer starts at the moment fault injection begins.
-
-## Bridge Commands
-
-Simulation configuration is also accessible via the JS↔Rust bridge:
-
-```
-set_scheduler random
-set_task_limit 500
-set_lifelong true
-```
-
-> [!WARNING] These commands are effective before the simulation starts. Changes to scheduler or task limit after a run has begun are not supported — configure before starting.
+1. Record: seed, topology, agent count, scheduler, solver, fault intensity, and any scheduled fault scenario.
+2. Set all parameters identically.
+3. The simulation will produce identical results — bit-for-bit deterministic.

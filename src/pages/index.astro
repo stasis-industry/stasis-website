@@ -36,7 +36,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
             under real-world faults.
           </p>
           <div class="hero-cta">
-            <a href="#the-gap" class="btn-primary">Read the thesis ↓</a>
+            <a href="#the-gap" class="btn-primary">Explore the research ↓</a>
             <a href="/simulator" class="btn-docs">Try Simulator</a>
           </div>
         </div>
@@ -70,7 +70,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
     <section class="thesis-section">
       <div class="section-inner">
         <div class="thesis-text fade-in-up">
-          <span class="section-label">THE THESIS</span>
+          <span class="section-label">THE HYPOTHESIS</span>
           <h2 class="thesis-title">Performance does not predict <em>resilience.</em></h2>
           <p class="thesis-desc">
             The same solver. The same map. The same fault.
@@ -97,9 +97,9 @@ import CascadeScene from '../components/CascadeScene.jsx';
           <span class="section-label">THE OBSERVATORY</span>
           <h2 class="observatory-title">Two phases. Four metrics. One resilience <em>profile.</em></h2>
           <p class="observatory-desc">
-            Every MAFIS run begins with a clean baseline — no faults,
-            no interference. Then faults activate. The delta between
-            clean and degraded performance is the research output.
+            Every MAFIS run computes a fault-free baseline instantly,
+            then runs the live simulation with faults active from tick one.
+            The delta between clean and degraded performance is the research output.
           </p>
         </div>
 
@@ -110,20 +110,20 @@ import CascadeScene from '../components/CascadeScene.jsx';
         <div class="scorecard" id="resilience-scorecard">
           <h4 class="scorecard-title">RESILIENCE SCORECARD</h4>
           <div class="scorecard-metric">
-            <span class="scorecard-metric-label">Robustness</span>
-            <span class="scorecard-metric-value sc-green"><span class="counter" data-target="87" data-start="0" data-format="decimal">0</span></span>
+            <span class="scorecard-metric-label">Fault Tolerance</span>
+            <span class="scorecard-metric-value sc-green"><span class="counter" data-target="82" data-start="0" data-format="decimal">0</span></span>
           </div>
           <div class="scorecard-metric">
-            <span class="scorecard-metric-label">Recoverability</span>
-            <span class="scorecard-metric-value sc-blue"><span class="counter" data-target="12" data-start="0" data-format="ticks">0</span> ticks</span>
+            <span class="scorecard-metric-label">NRR</span>
+            <span class="scorecard-metric-value sc-blue"><span class="counter" data-target="91" data-start="0" data-format="decimal">0</span></span>
           </div>
           <div class="scorecard-metric">
             <span class="scorecard-metric-label">Adaptability</span>
             <span class="scorecard-metric-value sc-orange"><span class="counter" data-target="64" data-start="0" data-format="decimal">0</span></span>
           </div>
           <div class="scorecard-metric">
-            <span class="scorecard-metric-label">Degradation</span>
-            <span class="scorecard-metric-value sc-muted">−<span class="counter" data-target="3" data-start="0" data-format="slope">0</span>/tick</span>
+            <span class="scorecard-metric-label">Critical Time</span>
+            <span class="scorecard-metric-value sc-muted"><span class="counter" data-target="15" data-start="0" data-format="decimal">0</span></span>
           </div>
         </div>
       </div>
@@ -785,6 +785,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
       width: 100%;
       padding: 80px 0;
       scroll-snap-align: center;
+      overflow: hidden;
     }
     .cascade-layout {
       display: grid;
@@ -806,6 +807,10 @@ import CascadeScene from '../components/CascadeScene.jsx';
       font-size: clamp(0.95rem, 1.3vw, 1.05rem);
       color: var(--text); opacity: 0.6;
       line-height: 1.8;
+    }
+    .cascade-scene-wrapper {
+      width: 100%;
+      overflow: hidden;
     }
     .cascade-scene {
       width: 100%;
@@ -1143,7 +1148,10 @@ import CascadeScene from '../components/CascadeScene.jsx';
     @media (max-width: 600px) {
       .hero-canvas-wrapper { display: none; }
       .hero-content { padding: 0 20px; height: 100vh; height: 100dvh; display: flex; flex-direction: column; justify-content: center; }
-      .hero-title { font-size: 3.5rem; margin-bottom: 20px; line-height: 1.05; }
+      .hero-title { font-size: 3.2rem; margin-bottom: 20px; line-height: 1.05; }
+      .hero-subtitle { font-size: 0.95rem; line-height: 1.7; margin-bottom: 32px; }
+      .hero-cta { flex-direction: column; gap: 12px; width: 100%; }
+      .hero-cta .btn-primary, .hero-cta .btn-docs { text-align: center; width: 100%; padding: 16px 28px; }
 
       /* Engine section: let it flow naturally, no forced viewport */
       .dark-section { min-height: auto; padding: 48px 0; background-color: #080808; }
@@ -1174,35 +1182,37 @@ import CascadeScene from '../components/CascadeScene.jsx';
 
       .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
 
-      /* Gap section mobile — centered, compact */
-      .gap-section { padding: 60px 20px; }
-      .gap-title { font-size: 1.8rem; margin-bottom: 20px; }
-      .gap-text { font-size: 0.9rem; margin-bottom: 20px; line-height: 1.6; }
-      .gap-quote { font-size: 1rem; }
+      /* Gap section mobile */
+      .gap-section { padding: 80px 20px; }
+      .gap-title { font-size: 1.8rem; margin-bottom: 24px; }
+      .gap-text { font-size: 0.9rem; margin-bottom: 28px; line-height: 1.7; }
+      .gap-quote { font-size: 1.05rem; line-height: 1.6; }
 
       /* Thesis mobile */
-      .thesis-section { padding: 48px 0; }
-      .thesis-title { font-size: 1.8rem; }
-      .thesis-text { margin-bottom: 24px; }
-      .thesis-desc { font-size: 0.9rem; line-height: 1.6; }
+      .thesis-section { padding: 60px 0; }
+      .thesis-title { font-size: 1.8rem; margin-bottom: 16px; }
+      .thesis-text { margin-bottom: 28px; }
+      .thesis-desc { font-size: 0.9rem; line-height: 1.7; }
       .thesis-scenes { min-height: auto; }
-      .thesis-caption { margin-top: 16px; font-size: 9px; }
+      .thesis-caption { margin-top: 20px; font-size: 9px; letter-spacing: 0.08em; }
 
       /* Observatory mobile */
-      .observatory-section { padding: 48px 0; }
-      .observatory-title { font-size: 1.8rem; }
-      .observatory-desc { font-size: 0.9rem; line-height: 1.6; }
-      .observatory-timeline { min-height: 180px; margin-bottom: 24px; }
-      .scorecard { padding: 20px; }
-      .scorecard-title { margin-bottom: 12px; }
-      .scorecard-metric { padding: 8px 0; }
-      .scorecard-metric-label { font-size: 10px; }
-      .scorecard-metric-value { font-size: 12px; }
+      .observatory-section { padding: 60px 0; }
+      .observatory-title { font-size: 1.8rem; margin-bottom: 16px; }
+      .observatory-desc { font-size: 0.9rem; line-height: 1.7; }
+      .observatory-timeline { min-height: 180px; margin-bottom: 28px; }
+      .scorecard { padding: 24px 20px; }
+      .scorecard-title { margin-bottom: 16px; }
+      .scorecard-metric { padding: 12px 0; }
+      .scorecard-metric-label { font-size: 11px; letter-spacing: 0.1em; }
+      .scorecard-metric-value { font-size: 14px; }
 
       /* Cascade mobile */
-      .cascade-section { padding: 48px 0; }
-      .cascade-title { font-size: 1.6rem; }
-      .cascade-desc { font-size: 0.9rem; line-height: 1.6; }
+      .cascade-section { padding: 60px 0; }
+      .cascade-section .section-inner { padding: 32px 16px; }
+      .cascade-title { font-size: 1.6rem; margin-bottom: 16px; }
+      .cascade-desc { font-size: 0.9rem; line-height: 1.7; margin-bottom: 8px; }
+      .cascade-scene-wrapper { overflow: hidden; }
 
       /* Bevy credit mobile */
       .bevy-credit { font-size: 0.85rem; margin-top: 24px; color: #F0EDE9; opacity: 0.45; }
@@ -1302,6 +1312,17 @@ import CascadeScene from '../components/CascadeScene.jsx';
       .thesis-section, .observatory-section, .cascade-section { min-height: 100dvh; }
       .dark-section, .community-section { min-height: 100dvh; }
       .gap-section { min-height: 100dvh; }
+
+      /* Cascade: center the scene, constrain width */
+      .cascade-scene-wrapper { display: flex; justify-content: center; }
+      .cascade-scene { max-width: 90%; }
+      .cascade-metrics { justify-content: center; }
+
+      /* Scorecard: more breathing room */
+      .scorecard { padding: 28px 24px; }
+      .scorecard-metric { padding: 14px 0; }
+      .scorecard-metric-label { font-size: 12px; }
+      .scorecard-metric-value { font-size: 14px; }
     }
 
     /* ─── Entrance Animations ────────────────────────────── */

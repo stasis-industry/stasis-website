@@ -1,58 +1,64 @@
 ---
 title: Resilience Scorecard
-description: The four metrics that characterize a system's fault resilience profile — Robustness, Recoverability, Adaptability, and Degradation Slope.
+description: Four research-backed metrics that characterize how a multi-agent system behaves under sustained faults — Fault Tolerance, NRR, Adaptability, and Critical Time.
 ---
 
-The **Resilience Scorecard** is a set of four metrics computed during the fault injection phase. Together they give a complete characterization of how a (solver, scheduler, topology, fault intensity) configuration responds to sustained faults. The scorecard is displayed in the right sidebar and exported with every run.
+The **Resilience Scorecard** is computed live during the fault injection phase. It distills raw metrics into four research-backed indicators that together answer: *is this system resilient, degrading, or collapsing?*
 
 ```
 RESILIENCE SCORECARD
-  Robustness       0.87
-  Recoverability   12 ticks
-  Adaptability     0.64
-  Degradation      -0.003/tick  (Stable)
+  Fault Tolerance    0.82
+  NRR                0.91
+  Adaptability       0.64
+  Critical Time      0.15
+
+  Composite Score    0.80  →  RESILIENT
 ```
 
 ---
 
-## 1. Robustness
+## 1. Fault Tolerance (FT)
 
-*How much does throughput drop per fault?*
+*How much throughput does the system retain under faults?*
 
-$$R = 1 - \frac{\overline{\Delta T}}{T_b}$$
+$$FT = \frac{P_{\text{fault}}}{P_{\text{nominal}}}$$
 
 | Variable | Meaning |
 |---|---|
-| $R$ | Robustness score ∈ [0, 1] |
-| $\overline{\Delta T}$ | Mean throughput dip per fault, averaged over $W = 20$ ticks post-fault |
-| $T_b$ | Baseline throughput (goals/tick) captured during warmup |
+| $P_{\text{fault}}$ | Average throughput during fault injection |
+| $P_{\text{nominal}}$ | Baseline throughput (fault-free) |
 
-- **Range:** 0.0 (throughput collapses on every fault) → 1.0 (faults have no throughput effect).
-- **Data sources:** `FaultMetrics.throughput` + `ResilienceBaseline.baseline_throughput`
+- **Range:** 0 (no throughput under faults) → 1+ (throughput matches or exceeds baseline)
+- **Weight in composite:** 30%
 
-> [!TIP] **Example:** $T_b = 2.4$ goals/tick. Mean dip per fault = $0.31$ goals/tick. $R = 1 - (0.31 / 2.4) = 0.87$.
+**Origin:** Adapted from Milner (2023), *"Quantifying Fault Tolerance in Autonomous Multi-Robot Systems"* — defines fault tolerance as the ratio of degraded performance to nominal performance.
+
+**Real-life example:** A warehouse fleet delivers 100 packages/hour normally. Under faults, it delivers 82/hour. FT = 0.82. A fleet manager uses this to decide: "Can I absorb a 3-robot failure during peak hours without missing SLAs?"
+
+> [!TIP] **Animation concept:** Two throughput bars side by side — a tall "baseline" bar and a shorter "under faults" bar. The ratio between them fills a gauge labeled "Fault Tolerance."
 
 ---
 
-## 2. Recoverability
+## 2. NRR — Normalized Recovery Ratio
 
-*How fast does throughput return after a disruption?*
+*How much time does the system spend recovering versus operating?*
 
-$$t_{\text{rec}} = \frac{1}{|F|} \sum_{f \in F} \bigl( t_f^{\uparrow} - t_f^{\downarrow} \bigr)$$
+$$NRR = 1 - \frac{MTTR}{MTBF}$$
 
 | Variable | Meaning |
 |---|---|
-| $F$ | Set of all fault events in the run |
-| $t_f^{\downarrow}$ | First tick where throughput drops below $0.8 \cdot T_b$ after fault $f$ |
-| $t_f^{\uparrow}$ | First tick where throughput recovers above $0.9 \cdot T_b$ after fault $f$ |
-| $t_{\text{rec}}$ | Mean recovery duration in ticks (lower = better) |
+| $MTTR$ | Mean Time To Recovery (ticks to resume after a fault) |
+| $MTBF$ | Mean Time Between Faults (ticks between fault events) |
 
-- **Unit:** ticks (lower = better).
-- **Data sources:** `FaultMetrics.throughput` time-series + `ResilienceBaseline`
+- **Range:** 0 (always recovering) → 1 (recovers instantly relative to fault frequency)
+- **Weight in composite:** 25%
+- **Requires** at least 2 fault events to compute.
 
-> [!NOTE] **Edge cases:** If throughput never drops below 80%, the fault is recorded as "absorbed" ($t_f^\downarrow - t_f^\uparrow = 0$). If throughput never returns above 90%, the event is marked "not recovered" and excluded from the mean.
+**Origin:** Or (2025), *"MTTR-A: Measuring Cognitive Recovery Latency in Multi-Agent Systems"* — defines NRR as the uptime bound, proving that steady-state operational fraction satisfies $\pi_{up} \geq NRR$.
 
-> [!TIP] **Example:** Three faults recovered in 8, 12, and 16 ticks. $t_{\text{rec}} = (8 + 12 + 16) / 3 = 12$ ticks.
+**Real-life example:** If a fleet takes 10 ticks to recover and faults occur every 100 ticks, NRR = 0.90 — the fleet is operational 90%+ of the time. If recovery takes 50 ticks with faults every 60 ticks, NRR = 0.17 — the fleet is almost always recovering and rarely productive.
+
+> [!TIP] **Animation concept:** A timeline with alternating green (operational) and red (recovering) segments. The ratio of green to total fills a gauge labeled "NRR." High NRR = mostly green.
 
 ---
 
@@ -60,56 +66,63 @@ $$t_{\text{rec}} = \frac{1}{|F|} \sum_{f \in F} \bigl( t_f^{\uparrow} - t_f^{\do
 
 *Does the system redistribute traffic after a fault?*
 
-$$A = \frac{H(t_f + w) - H(t_f)}{H_{\max}}$$
+$$A = \frac{H(t)}{H_{\max}}$$
 
 | Variable | Meaning |
 |---|---|
-| $H(t)$ | Shannon entropy of heatmap cell density at tick $t$ |
-| $t_f$ | Tick at which fault $f$ occurred |
-| $w$ | Recovery window (ticks) over which redistribution is observed |
-| $H_{\max}$ | Maximum possible entropy for this grid size ($\log_2$ of walkable cell count) |
-| $A$ | Adaptability score ∈ [0, 1] |
+| $H(t)$ | Shannon entropy of heatmap density at tick $t$ |
+| $H_{\max}$ | Maximum possible entropy: $\ln(\text{walkable cells})$ |
 
-- **Entropy increases** → agents redistributed to new routes → system adapted.
-- **Entropy stays flat** → agents jammed at the blockage → no adaptation.
-- **Data source:** `HeatmapState.density` — requires heatmap active during fault phase.
+- **Range:** 0 (all agents stuck in one area) → 1 (perfectly distributed across the grid)
+- **Weight in composite:** 25%
 
-> [!NOTE] Adaptability is distinct from recoverability. A system can recover throughput quickly without redistributing routes (agents detour around the specific blockage), or it can redistribute broadly while still showing throughput loss. Both dimensions are independent research signals.
+**Origin:** Shannon entropy as a spatial distribution measure is standard in information theory. Applied here to measure whether agents redistribute to alternative routes after a fault blocks their primary path.
+
+**Real-life example:** A delivery corridor is blocked. If all robots queue behind the blockage (low entropy), the system is not adaptive. If they spread to alternative corridors (high entropy), throughput recovers faster. A fleet operator asks: "Will my system reroute or jam?"
+
+> [!TIP] **Animation concept:** A grid heatmap. Before fault: agents clustered in corridors (hot spots). After fault: heat spreads across the grid as agents find new routes. An entropy gauge rises from low to high.
 
 ---
 
-## 4. Degradation Slope
+## 4. Critical Time (CT)
 
-*Does the system degrade gracefully or collapse?*
+*How much time does the system spend in a critical state?*
 
-$$\beta = \frac{\sum_{t} \bigl(t - \bar{t}\bigr)\bigl(T(t) - \bar{T}\bigr)}{\sum_{t} \bigl(t - \bar{t}\bigr)^2}$$
+$$CT = \frac{t_{\text{below}}}{t_{\text{fault}}}$$
 
 | Variable | Meaning |
 |---|---|
-| $T(t)$ | Throughput (goals/tick) at tick $t$ during fault injection |
-| $\bar{t},\, \bar{T}$ | Means of $t$ and $T(t)$ over the fault phase window |
-| $\beta$ | Ordinary least-squares slope of throughput over time (goals/tick²) |
+| $t_{\text{below}}$ | Ticks where throughput < 50% of baseline |
+| $t_{\text{fault}}$ | Total ticks since first fault |
 
-- Recomputed every 50 ticks (not every tick).
-- **Labels:**
+- **Range:** 0 (never critical) → 1 (always critical)
+- **Weight in composite:** 20% (inverted: $1 - CT$)
+- **Threshold:** 50% of baseline throughput
 
-| Slope $\beta$ | Label |
-|---|---|
-| $> -0.001$ | **Stable** |
-| $-0.005$ to $-0.001$ | **Degrading** |
-| $< -0.005$ | **Collapsing** |
-| $> +0.001$ | **Improving** |
+**Origin:** Adapted from Ghasemieh (2024), *"Transient Analysis of Fault-Tolerant Systems"* — uses time-below-threshold as a measure of system criticality during transient degradation.
 
-> [!IMPORTANT] Near-zero $\beta$ means the system reached a new equilibrium under faults and maintains it. A strongly negative $\beta$ means each additional fault degrades capacity further — a sign of structural fragility that will eventually produce collapse.
+**Real-life example:** After a cascade failure, throughput drops to 30% of baseline for 45 out of 300 ticks. CT = 0.15. A reliability engineer asks: "How often is my system dangerously degraded?" CT = 0.15 means "only 15% of the time" — acceptable. CT = 0.60 means "more often than not" — redesign needed.
+
+> [!TIP] **Animation concept:** A throughput curve over time with a dashed red line at 50% baseline. The segments below the line flash red. CT = the red fraction of the total timeline.
+
+---
+
+## Composite Score
+
+The four metrics combine into a single resilience score:
+
+$$\text{Score} = 0.30 \times FT + 0.25 \times NRR + 0.25 \times A + 0.20 \times (1 - CT)$$
+
+The verdict banner classifies the result:
+
+| Score | Verdict | Meaning |
+|---|---|---|
+| $\geq 0.7$ | **RESILIENT** | System absorbs faults and recovers |
+| $0.4 - 0.7$ | **DEGRADING** | System is losing ground over time |
+| $< 0.4$ | **COLLAPSING** | System cannot sustain operation |
 
 ---
 
 ## Export
 
-All four scorecard values are included in the JSON/CSV export alongside the raw fault metrics. This allows offline analysis and cross-run comparison.
-
-## Implementation
-
-The scorecard is computed by the `update_resilience_scorecard` system in `AnalysisSet::Metrics`, running after `update_fault_metrics`. It reads from `FaultMetrics`, `ResilienceBaseline`, and `HeatmapState` — no new data collection systems are needed.
-
-See [Simulation Phases](/docs/researchers/observatory/simulation-phases) for how the baseline is established, and [Fault Metrics](/docs/researchers/metrics/fault-metrics) for the raw metrics the scorecard builds on.
+All four scorecard values plus the composite score are included in JSON/CSV exports for offline analysis and cross-run comparison.

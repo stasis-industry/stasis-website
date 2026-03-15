@@ -1,100 +1,163 @@
 ---
 title: Fault Metrics
-description: The research-grade KPIs computed by MAFIS during fault injection — MTTR, Recovery Rate, Cascade Depth, Cascade Spread, Throughput, Idle Ratio, and Fault Survival Rate.
+description: The metrics MAFIS computes during fault injection — where each comes from, why it matters, and what it reveals about multi-agent system resilience.
 ---
 
-MAFIS computes seven fault metrics during the fault injection phase (`src/analysis/fault_metrics.rs`). Each is measured against the warmup baseline so results are comparative rather than absolute. The primary research variables swept against these metrics are **scheduler strategy**, **fault intensity**, and **grid topology** — not the solver (PIBT is held constant).
+MAFIS computes fault metrics during the fault injection phase. Each metric is measured against the fault-free baseline, so results are comparative — not absolute. The primary research variables swept against these metrics are **scheduler strategy**, **fault intensity**, and **grid topology**.
 
 ---
 
 ## MTTR — Mean Time To Recovery
 
-**Unit:** Ticks | **Scope:** Per fault event, aggregated to mean
+**Unit:** Ticks | **Lower is better**
 
-When an agent dies and becomes an obstacle, surrounding agents must replan around it. MTTR measures how many ticks it takes on average for affected agents to have a valid new plan and resume moving toward their goal.
+How many ticks it takes for affected agents to resume productive movement after a fault.
 
-> [!NOTE] **Real-world analogy:** A warehouse robot breaks down in an aisle. MTTR answers: "How long does the fleet take to reroute?" A low MTTR means the system adapts quickly. A high MTTR means the algorithm struggles to find alternatives, producing a traffic jam that ripples outward.
+**Origin:** Adapted from classical dependability theory (IEEE Std 762). Or (2025) extends MTTR to multi-agent cognitive systems, decomposing recovery into detection latency ($T_{detect}$) and execution latency ($T_{execute}$).
 
-> [!TIP] **Research use:** With PIBT as the fixed solver, MTTR is primarily driven by scheduler strategy and corridor geometry. The same solver can produce vastly different recovery profiles depending on how tasks are assigned and where agents are concentrated.
+**Why it matters:** MTTR tells you how long your fleet is disrupted after each incident. Two systems can have identical throughput on average but very different MTTR — one recovers in 5 ticks (a brief hiccup), the other in 50 ticks (a sustained outage).
+
+**Real-life example:** A warehouse robot breaks down in aisle 4. MTTR answers: "How long until the surrounding robots find new routes and resume deliveries?" A fleet with MTTR = 8 means an 8-tick disruption per incident. Multiply by fault frequency and you know your expected downtime per shift.
+
+> [!TIP] **Animation:** An agent turns red (dead). Nearby agents freeze, then one by one start moving again. A timer counts the ticks until the last affected agent resumes. That timer value = MTTR.
+
+---
+
+## MTBF — Mean Time Between Faults
+
+**Unit:** Ticks | **Higher is better**
+
+Average number of ticks between consecutive fault events.
+
+**Origin:** Classical reliability engineering (MIL-HDBK-217). In MAFIS, MTBF is computed from inter-event intervals rather than failure rates, because fault injection is scenario-driven, not component-lifetime-driven.
+
+**Why it matters:** MTBF sets the pace of disruption. Combined with MTTR, it determines operational uptime: if MTTR is 10 ticks and MTBF is 100 ticks, the system is operational ~90% of the time. If MTBF drops to 20 ticks, the system never fully recovers between faults.
+
+**Real-life example:** A fleet experiences a breakdown every 200 ticks on average. That's MTBF = 200. If you increase fault intensity to "High," MTBF might drop to 50 — faults arrive four times faster. The question is whether your system can still recover between events.
+
+> [!TIP] **Animation:** A timeline with fault markers (red dots). The gaps between dots = inter-fault intervals. MTBF = the average gap length.
 
 ---
 
 ## Recovery Rate
 
-**Unit:** Percentage (0–100%) | **Scope:** Global aggregate
+**Unit:** Percentage (0–100%) | **Higher is better**
 
-Of all agents affected by a fault (forced to replan), what percentage successfully found a new path versus deadlocked or got permanently stuck?
+Of all agents that were affected by a fault and needed to replan, what percentage successfully found a new path?
 
-> [!NOTE] **Real-world analogy:** If 10 robots are blocked by a breakdown, recovery rate tells you: "8 out of 10 found alternate routes, 2 need human intervention." 100% means the system is self-healing.
+**Origin:** Standard availability metric. In MAFIS, "recovery" means the agent either found a valid new plan or reached its goal despite the disruption.
 
-> [!TIP] **Research use:** This separates *slow recovery* from *no recovery*. High MTTR + 100% recovery = slow but reliable. Low MTTR + 80% recovery = fast but lossy. Very different operational profiles — and the difference is driven by how tasks are distributed, not the pathfinding algorithm alone.
+**Why it matters:** Recovery Rate separates *slow recovery* from *no recovery*. High MTTR + 100% recovery = slow but self-healing. Low MTTR + 80% recovery = fast response but some agents get permanently stuck and need intervention.
+
+**Real-life example:** 10 robots are blocked by a breakdown. 8 find alternate routes, 2 deadlock and need human intervention. Recovery rate = 80%. A fleet operator uses this to estimate how many support staff they need on the floor.
+
+> [!TIP] **Animation:** Affected agents (orange) fan out. Most turn green (recovered). A few stay orange (stuck). The counter shows "8/10 recovered = 80%."
 
 ---
 
 ## Cascade Depth
 
-**Unit:** Levels (integer) | **Scope:** Per fault event
+**Unit:** Levels (integer) | **Lower is better**
 
-When agent A dies, agent B must replan because A blocks its path. B's new path now blocks C, who blocks D. Cascade depth measures how many levels deep this chain reaction goes.
+When an agent dies, it blocks other agents who must replan. Their new paths block others, who block others still. Cascade depth counts how many levels deep this chain reaction goes.
 
-> [!NOTE] **Real-world analogy:** A highway pileup. One car stops, the car behind brakes, the next one brakes, etc. Depth = 1 means only direct neighbors are affected. Depth = 5 means a single fault destabilized agents five hops away.
+**Origin:** Graph-theoretic BFS traversal on the Action Dependency Graph (ADG). Each "level" is one hop in the dependency chain. Capped at 10 levels.
 
-> [!TIP] **Research use:** High cascade depth reveals structural fragility. In lifelong mode, cascade depth depends on corridor width, agent density, and scheduling strategy. A scheduler that concentrates agents in narrow corridors produces higher cascade depth than one that distributes load.
+**Why it matters:** Depth reveals structural fragility. A cascade that reaches depth 5 means a single failure destabilized agents five dependency hops away. High depth = the system has long, fragile dependency chains, usually caused by narrow corridors where agents queue behind each other.
 
-**Implementation:** Computed by the `propagate_cascade` system via an Agent Dependency Graph (ADG). See [Cascade Propagation](/docs/researchers/fault-mechanics/breakdown-faults).
+**Real-life example:** A highway pileup. One car stops, the car behind brakes, the next one brakes. Depth = 1 means only direct neighbors affected. Depth = 5 means the disruption traveled five cars back. In a warehouse, that's five robots deep in a single aisle.
+
+> [!TIP] **Animation:** An agent turns red (dead). Level 1 neighbors flash orange. Level 2 (neighbors of neighbors) flash lighter orange. Each level ripples outward. A counter ticks: Depth 1 → 2 → 3 → 4.
 
 ---
 
 ## Cascade Spread
 
-**Unit:** Agent count (integer) | **Scope:** Per fault event, aggregated to mean
+**Unit:** Agents (integer) | **Lower is better**
 
-The total number of agents affected by a single fault event — not just the chain length.
+The total number of agents affected by a single fault event — not chain length, but total width.
 
-> [!NOTE] **Real-world analogy:** Depth = 3 but spread = 50 means the chain was short but wide — each level affected many agents simultaneously. Think of a bottleneck corridor where one blockage affects everyone queued behind it.
+**Origin:** BFS on the ADG, counting all reachable nodes from the fault source. Distinct from depth: a depth-2 cascade can have spread of 3 (narrow corridor) or 30 (wide intersection).
 
-> [!TIP] **Research use:** Spread identifies topological vulnerabilities. If one cell's fault consistently produces spread > 30% of the fleet, that cell is a critical infrastructure point. Combined with the heatmap, this pinpoints exactly where the map design is fragile.
+**Why it matters:** Spread identifies topological vulnerabilities. If one cell's failure consistently affects 30% of the fleet, that cell is critical infrastructure — a single point of failure in the map layout.
+
+**Real-life example:** One robot breaks down at a warehouse intersection. Cascade depth is only 2 (short chain), but spread is 23 (many agents queued in multiple directions). The intersection is a bottleneck — redesigning the layout to add parallel paths would reduce spread.
+
+> [!TIP] **Animation:** Same ripple as cascade depth, but instead of counting levels, count total agents affected. A wide intersection lights up many agents at each level. Counter shows: Spread 3 → 8 → 15 → 23.
+
+---
+
+## Propagation Rate
+
+**Unit:** Ratio (0–1) | **Lower is better**
+
+Fraction of the live fleet affected per fault event, averaged across all events. Normalizes cascade spread by fleet size.
+
+**Origin:** Normalized version of cascade spread. A spread of 20 agents means something very different in a 50-agent fleet (40% affected) versus a 500-agent fleet (4% affected).
+
+**Why it matters:** Propagation rate makes results comparable across different fleet sizes and configurations. It answers: "What fraction of my operational fleet gets disrupted by each incident?"
+
+**Real-life example:** A 200-robot warehouse has propagation rate 0.08 — each fault disrupts 8% of the fleet. Scaling to 400 robots, if propagation rate stays at 0.08, each fault still disrupts 8% (now 32 robots). If propagation rate increases, the larger fleet has worse fault isolation.
+
+> [!TIP] **Animation:** A fleet grid where affected agents light up. A fraction gauge fills to show what percentage of the total fleet was hit.
 
 ---
 
 ## Throughput
 
-**Unit:** Goals per tick (float, sliding window) | **Scope:** Global rate
+**Unit:** Goals per tick | **Higher is better**
 
-Running rate of how many agents reach their goals per unit of simulation time. Not a cumulative total — the rate. The sliding window smooths tick-to-tick variance.
+Number of tasks completed at each tick. The instantaneous count of agents that reached their delivery destination at tick T.
 
-> [!NOTE] **Real-world analogy:** In logistics, "packages delivered per hour." When a fault occurs, throughput drops — the question is how much and for how long.
+**Origin:** Standard operations research KPI. In MAFIS, throughput is tracked both as instantaneous counts (for charts) and as a rolling window average (for metric comparisons).
 
-> [!TIP] **Research use:** Throughput under fault vs baseline throughput = the fault penalty ratio. The warmup phase captures baseline automatically. Different schedulers produce different penalty profiles — a nearest-first scheduler might have higher baseline throughput but a worse fault penalty than a random scheduler that naturally distributes load.
+**Why it matters:** Throughput under faults versus baseline throughput = the fault penalty. The headless baseline provides the reference automatically. The deviation after a fault is the core research output.
+
+**Real-life example:** "Packages delivered per minute." Normally 2.4/tick. Under faults, drops to 1.8/tick. The fault penalty is 0.6/tick — that's the cost of each incident. Different scheduling strategies produce different penalties.
+
+> [!TIP] **Animation:** A line chart drawing in real-time. A solid line (live) and a dashed line (baseline) diverge when a fault fires — the live line dips while the baseline continues steady. The gap between them = the fault penalty.
 
 ---
 
 ## Idle Ratio
 
-**Unit:** Percentage (0–100%) | **Scope:** Per-agent and global aggregate
+**Unit:** Percentage (0–100%) | **Lower is better**
 
-Percentage of ticks where agents execute `Action::Wait` instead of moving. Measures how much time agents spend blocked, waiting for others, or assigned a wait by the algorithm.
+Fraction of ticks where agents wait instead of moving. Measures fleet utilization.
 
-> [!NOTE] **Real-world analogy:** Robot utilization rate. If 500 robots have 40% idle ratio, you're paying for 500 but getting the work of 300. Under faults, idle ratio spikes because agents are stuck behind blockages.
+**Origin:** Standard utilization metric. Dead agents contribute 100% idle (they can never move again), which makes the metric sensitive to fleet attrition.
 
-> [!TIP] **Research use:** Idle ratio distinguishes path quality from throughput. Two configurations might have the same throughput but one achieves it with 10% idle (efficient routing) and the other with 50% idle (stop-and-go waves). It also shows the congestion signature of each scheduler strategy.
+**Why it matters:** Two configurations can have identical throughput but different idle ratios. One achieves it with fluid movement (10% idle), the other with stop-and-go waves (50% idle). Idle ratio reveals the congestion signature of each scheduler.
 
-**Per-agent tracking:** Each agent carries an `AgentActionStats` component tracking `total_actions`, `wait_actions`, and `move_actions`. The global idle ratio is computed as the mean across all living agents.
+**Real-life example:** 500 robots, 40% idle ratio = you're paying for 500 but getting the output of 300. Under faults, idle ratio spikes because agents queue behind blockages. A fleet operator asks: "Am I over-provisioning or under-routing?"
 
----
-
-## Fault Survival Rate
-
-**Unit:** Percentage (0–100%), time-series | **Scope:** Global, sampled every tick
-
-Percentage of agents still alive (not broken down) at any given tick. A time-series curve, not a single number.
-
-> [!NOTE] **Real-world analogy:** Fleet attrition rate. "After 1000 ticks, 85% of the fleet is still operational." This directly impacts fleet sizing decisions — if you need 400 active robots and survival rate at $T = 1000$ is 80%, you need to deploy 500.
-
-> [!IMPORTANT] **Research use:** Plotted alongside throughput, the survival curve reveals whether the system degrades linearly (lose 10% robots → lose 10% throughput) or collapses nonlinearly (lose 10% robots → lose 50% throughput due to cascades). Nonlinear collapse is the dangerous regime MAFIS is designed to expose.
+> [!TIP] **Animation:** A grid of agents. Moving agents are green, waiting agents are grey. The ratio of grey to total fills a bar labeled "Idle Ratio." After a fault, the grey ratio spikes then slowly recovers.
 
 ---
 
-## Relationship to the Resilience Scorecard
+## Survival Rate
 
-The Resilience Scorecard (Robustness, Recoverability, Adaptability, Degradation Slope) is computed from these raw metrics. Throughput and the baseline drive three of the four scorecard values. See [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard) for the full formulas.
+**Unit:** Percentage (0–100%), time-series | **Higher is better**
+
+Fraction of agents still alive (not permanently broken down) at each tick.
+
+**Origin:** Fleet attrition tracking. Plotted as a curve over time, not a single number.
+
+**Why it matters:** Survival rate is the baseline context for all other metrics. The key question: does the system degrade linearly (lose 10% agents → lose 10% throughput) or collapse nonlinearly (lose 10% agents → lose 50% throughput due to cascades)? Nonlinear collapse is the dangerous regime MAFIS is designed to expose.
+
+**Real-life example:** After 1000 ticks, 85% of robots are still operational. If you need 400 active robots at all times and survival at T=1000 is 80%, you need to deploy 500 to maintain capacity. Survival rate drives fleet sizing decisions.
+
+> [!TIP] **Animation:** A survival curve drawing left to right. Starts at 100%, drops in steps as agents die. Alongside it, a throughput curve. If both drop at the same rate = linear degradation (manageable). If throughput drops faster than survival = nonlinear collapse (dangerous).
+
+---
+
+## How Metrics Feed the Scorecard
+
+These raw metrics flow into the [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard):
+
+| Raw Metric | Feeds Into |
+|---|---|
+| Throughput + Baseline | Fault Tolerance (FT) |
+| MTTR + MTBF | NRR |
+| Heatmap density | Adaptability |
+| Throughput below threshold | Critical Time (CT) |

@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Website for **Stasis AI** and its product **MAFIS** (Multi-Agent Fault Injection Simulator) — a Rust/Bevy/WASM simulator for chaos engineering in MAPF (Multi-Agent Path Finding) networks. This repo is the marketing site and documentation hub, not the simulator itself.
 
+MAFIS is a **research project** (not a thesis) by a 5th-year CS student. It may be submitted for peer review and potential publication.
+
 ## Commands
 
 ```bash
@@ -55,12 +57,12 @@ npx playwright test --headed           # Run with visible browser
 ## Key Patterns
 
 - **View transitions**: All interactive scripts must use `document.addEventListener('astro:page-load', ...)` instead of `DOMContentLoaded` to work after SPA navigations. Clone-and-replace pattern used in Header.astro to avoid duplicate event listeners.
-- **Homepage scroll snap**: `index.astro` uses `scroll-snap-type: y mandatory` on `.snap-container`. Each section is a snap point. Header auto-hides on scroll. Back-to-top temporarily disables snap for smooth scroll.
+- **Homepage scroll snap**: `index.astro` uses `scroll-snap-type: y proximity` on `.snap-container`. Each section is a snap point. Header auto-hides on scroll. Back-to-top temporarily disables snap for smooth scroll.
 - **Inline scripts**: Scripts that must run before paint (theme detection) use `<script is:inline>`. Others use standard `<script>` for bundling.
 
 ## Companion Rust/WASM Project
 
-The actual simulator being built in parallel lives at `/Users/teddyadmin/Developments/Rust/Research-Project/mapf-fis-3d`. It is a **Bevy 0.18** app compiled to WASM, intended to eventually power the `/simulator` page of this website.
+The actual simulator lives at `/Users/teddyadmin/Developments/Rust/Research-Project/mapf-fis-3d`. It is a **Bevy 0.18** app with both WASM (web) and native desktop targets.
 
 **Build pipeline** (run from the Rust project root):
 ```bash
@@ -72,17 +74,26 @@ wasm-bindgen --out-dir web --target web \
 basic-http-server web                                                  # Serve on port 4000
 ```
 
-**Integration plan**: The `web/` directory of the Rust project (`index.html`, `app.js`, generated `.js`/`.wasm` files) will be embedded into `/simulator` in this Astro site. The Bevy canvas is the central 3D viewport; HTML/CSS/JS controls are peripheral. Focus on WASM bindings and logic correctness — for UI additions use existing CSS variables and the "Scientific Instrument" aesthetic (no `border-radius` on buttons, no pure white backgrounds).
+**Solvers**: PIBT, RHCR (PBS/PIBT-Window/Priority A*), Token Passing. All lifelong-capable. `LifelongSolver` trait in `src/solver/lifelong.rs`.
 
-**Bevy↔JS bridge**: Rust exposes `get_simulation_state() -> String` (JSON) and `send_command(cmd: &str)` via `#[wasm_bindgen]`. JS polls at 100ms intervals. The bridge is in `src/ui/bridge.rs`.
+**Schedulers**: Random, Closest-first. `TaskScheduler` trait in `src/core/task.rs`.
 
-**Solver**: PIBT (lifelong-native). CBS/LaCAM/PBS/LNS2 archived on `archive/one-shot-solvers` branch — they cannot run in lifelong mode. See `src/solver/` for `MAPFSolver` trait and `SOLVER_NAMES` registry.
+**Topologies**: WarehouseTopology (S/M/L), OpenFloorTopology. `Topology` trait in `src/core/topology.rs`.
 
-**Lifelong mode**: Default and only mode. Agents continuously receive new tasks via `TaskScheduler`. `RandomScheduler` is the only scheduler currently implemented. Scheduler strategy (not solver) is the primary research variable.
+**Dual-twin simulation**: Headless Baseline (instant, fault-free reference) → Fault Injection (live sim with faults active from tick 1, metrics computed as deltas from baseline). No warmup phase.
 
-**Two-phase simulation**: Every run has Warmup (faults suppressed, baseline captured) → Fault Injection (faults active, resilience metrics computed as deltas from baseline). `SimulationPhase` enum tracks current phase.
+**Resilience Scorecard**: Fault Tolerance (Milner 2023), NRR (Or 2025), Adaptability (Shannon entropy), Critical Time (Ghasemieh 2024).
 
-**Observatory identity**: MAFIS is a fault resilience observatory, not a solver benchmark. It measures how lifelong multi-agent systems degrade, recover, and adapt under faults. Resilience Scorecard (Robustness, Recoverability, Adaptability, Degradation Slope) is the primary output.
+**Observatory identity**: MAFIS is a fault resilience observatory, not a solver benchmark. It measures how lifelong multi-agent systems degrade, recover, and adapt under faults.
+
+## Documentation Structure
+
+Docs have two sections (no developer docs — kept simple):
+
+**Getting Started**: Introduction, Installation
+**Research**: Observatory (Simulation Phases, Resilience Scorecard), Metrics (Fault Metrics), Fault Mechanics (Fault Types, Cascade Propagation, Heat System), Schedulers (Task Scheduling), Scenarios (Configuration, Tick Rewind)
+
+Navigation is hardcoded in `DocsLayout.astro`'s `navGroups` array.
 
 ## CI/CD
 

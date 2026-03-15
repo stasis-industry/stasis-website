@@ -43,7 +43,7 @@ struct TickHistory {
 }
 ```
 
-> [!NOTE] Warmup ticks are **not** recorded — the warmup phase is baseline-only with no fault events to rewind to. Recording begins when the simulation transitions to `SimulationPhase::FaultInjection`.
+> [!NOTE] Recording starts from tick 1 of the live simulation. The headless baseline is not recorded — it runs instantly and is stored separately as reference data.
 
 ## Memory Budget
 

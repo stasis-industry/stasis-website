@@ -14,11 +14,16 @@ interface Props {
 const { title, description, currentSlug, headings = [] } = Astro.props;
 
 const navGroups = [
-  { isSectionHeader: true, title: 'For Researchers' },
+  { isSectionHeader: true, title: 'Getting Started' },
   {
-    title: 'Overview',
-    items: [{ label: 'Introduction', slug: 'researchers/introduction' }]
+    title: 'Setup',
+    items: [
+      { label: 'Introduction', slug: 'researchers/introduction' },
+      { label: 'Installation', slug: 'getting-started/installation' },
+    ]
   },
+
+  { isSectionHeader: true, title: 'Research' },
   {
     title: 'Observatory',
     items: [
@@ -30,13 +35,6 @@ const navGroups = [
     title: 'Metrics',
     items: [
       { label: 'Fault Metrics', slug: 'researchers/metrics/fault-metrics' },
-    ]
-  },
-  {
-    title: 'MAPF Solvers',
-    items: [
-      { label: 'PIBT', slug: 'researchers/solvers/pibt' },
-      { label: 'Spacetime A*', slug: 'researchers/solvers/astar' },
     ]
   },
   {
@@ -58,30 +56,6 @@ const navGroups = [
     items: [
       { label: 'Configuration', slug: 'researchers/scenarios/scenario-loading' },
       { label: 'Tick Rewind', slug: 'researchers/scenarios/deterministic-replays' },
-    ]
-  },
-
-  { isSectionHeader: true, title: 'For Developers' },
-  {
-    title: 'Getting Started',
-    items: [
-      { label: 'Architecture', slug: 'developers/getting-started/architecture' },
-      { label: 'Quick Start', slug: 'developers/getting-started/quick-start' },
-    ]
-  },
-  {
-    title: 'Engine & ECS',
-    items: [
-      { label: 'Core Design', slug: 'developers/engine-ecs/core-design' },
-      { label: 'Agent Components', slug: 'developers/engine-ecs/agent-components' },
-      { label: 'Grid Structures', slug: 'developers/engine-ecs/grid-structures' },
-      { label: 'Task Scheduler', slug: 'developers/engine-ecs/task-scheduler' },
-    ]
-  },
-  {
-    title: 'Contributing',
-    items: [
-      { label: 'Adding Solvers', slug: 'developers/contributing/adding-solvers' },
     ]
   },
 ];
