@@ -12,7 +12,7 @@
       <a href="/simulator" class="nav-link">Simulator</a>
       <a href="/blog" class="nav-link">Blog</a>
       <a href="/about" class="nav-link">About</a>
-      <a href="https://github.com/stasisai" class="nav-link" target="_blank">Github ↗</a>
+      <a href="https://github.com/stasisai" class="nav-link" target="_blank" rel="noopener noreferrer">Github ↗</a>
     </nav>
     <div class="header-actions">
       <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Dark Mode">
@@ -33,7 +33,7 @@
     <a href="/simulator" class="mobile-link">Simulator</a>
     <a href="/blog" class="mobile-link">Blog</a>
     <a href="/about" class="mobile-link">About</a>
-    <a href="https://github.com/stasisai" class="mobile-link" target="_blank">Github ↗</a>
+    <a href="https://github.com/stasisai" class="mobile-link" target="_blank" rel="noopener noreferrer">Github ↗</a>
   </div>
 </div>
 
@@ -41,7 +41,7 @@
   .site-header {
     position: fixed; top: 0; left: 0; right: 0; z-index: 200; height: 70px;
     /* Use variables to adapt to layout dark mode */
-    background: rgba(var(--bg-rgb, 245, 242, 238), 0.9);
+    background: rgba(245, 242, 238, 0.9);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s;
     border-bottom: 1px solid rgba(128,128,128,0.1);
@@ -86,8 +86,6 @@
     color: var(--text); text-decoration: none;
     transition: opacity 0.2s;
   }
-  .nav-link:hover { opacity: 0.6; }
-
   .nav-link:hover { opacity: 0.6; }
 
   /* ACTIONS (Theme & Burger) */
@@ -154,21 +152,19 @@
     const mobileMenu = document.getElementById('mobile-menu');
     const themeToggle = document.getElementById('theme-toggle');
 
-    if (themeToggle) {
-      // Remove old listener to avoid duplicates on view transitions
+    if (themeToggle?.parentNode) {
       const newToggle = themeToggle.cloneNode(true);
       themeToggle.parentNode.replaceChild(newToggle, themeToggle);
-      
+
       newToggle.addEventListener('click', () => {
         const isDark = document.documentElement.classList.contains('dark');
         const nextTheme = isDark ? 'light' : 'dark';
         document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', nextTheme);
+        try { localStorage.setItem('theme', nextTheme); } catch (e) {}
       });
     }
 
-    if (burgerBtn && mobileMenu) {
-      // Remove old listener
+    if (burgerBtn?.parentNode && mobileMenu) {
       const newBurger = burgerBtn.cloneNode(true);
       burgerBtn.parentNode.replaceChild(newBurger, burgerBtn);
       

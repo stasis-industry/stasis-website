@@ -76,6 +76,7 @@ export default function ObservatoryTimeline() {
     if (!canvas || !container) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const dpr = window.devicePixelRatio || 1;
 
     let width = container.clientWidth;
@@ -105,7 +106,7 @@ export default function ObservatoryTimeline() {
       if (!running) return;
 
       if (!isPlaying) {
-        frameId = requestAnimationFrame(draw);
+        animStart = null;
         return;
       }
 

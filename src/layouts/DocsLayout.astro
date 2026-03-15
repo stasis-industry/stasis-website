@@ -175,19 +175,21 @@ const nextPage = currentIndex !== -1 && currentIndex < flatItems.length - 1 ? fl
     if (stateStr) {
       try {
         const state = JSON.parse(stateStr);
-        const details = document.querySelectorAll('details.sidebar-group');
-        details.forEach((d, i) => {
-          if (state[i] !== undefined) {
-             d.open = state[i];
-          }
-        });
-      } catch(e) {}
+        if (Array.isArray(state)) {
+          const details = document.querySelectorAll('details.sidebar-group');
+          details.forEach((d, i) => {
+            if (state[i] !== undefined) d.open = state[i];
+          });
+        }
+      } catch(e) {
+        sessionStorage.removeItem('sidebarState');
+      }
     }
 
     // 2. Mobile Menu Toggle (clone-and-replace to prevent duplicate listeners)
     const menuBtn = document.getElementById('docs-menu-btn');
     const sidebar = document.getElementById('docs-sidebar');
-    if (menuBtn && sidebar) {
+    if (menuBtn?.parentNode && sidebar) {
       const newBtn = menuBtn.cloneNode(true);
       menuBtn.parentNode.replaceChild(newBtn, menuBtn);
       newBtn.addEventListener('click', () => {
@@ -245,10 +247,14 @@ const nextPage = currentIndex !== -1 && currentIndex < flatItems.length - 1 ? fl
       
       btn.addEventListener('click', async () => {
         const code = block.querySelector('code');
-        if (code) {
+        if (!code) return;
+        try {
           await navigator.clipboard.writeText(code.innerText);
           btn.classList.add('copied');
           setTimeout(() => btn.classList.remove('copied'), 2000);
+        } catch (e) {
+          btn.title = 'Copy failed — try selecting manually';
+          setTimeout(() => { btn.title = 'Copy code'; }, 2000);
         }
       });
       
@@ -260,16 +266,10 @@ const nextPage = currentIndex !== -1 && currentIndex < flatItems.length - 1 ? fl
   document.addEventListener('astro:before-swap', () => {
     const details = document.querySelectorAll('details.sidebar-group');
     const state = Array.from(details).map(d => d.open);
-    sessionStorage.setItem('sidebarState', JSON.stringify(state));
+    try { sessionStorage.setItem('sidebarState', JSON.stringify(state)); } catch (e) {}
   });
 
   document.addEventListener('astro:page-load', initDocsUX);
-  
-  if (document.readyState === 'complete') {
-      initDocsUX();
-  } else {
-      document.addEventListener('DOMContentLoaded', initDocsUX);
-  }
 </script>
 
 <style>

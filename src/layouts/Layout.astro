@@ -12,7 +12,7 @@ interface Props {
 const { 
     title, 
     description = "MAFIS (Multi-Agent Fault Injection Simulator) is a blazing fast MAPF fault injection simulator built in Rust and WebAssembly by Stasis AI.",
-    image = "/social-share.png", 
+    image = "/favicon.svg",
     canonical = Astro.url.href 
 } = Astro.props;
 ---
@@ -23,7 +23,7 @@ const {
 		<meta charset="UTF-8" />
 		<title>{title}</title>
 		<meta name="description" content={description} />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="canonical" href={canonical} />
 		<meta name="generator" content={Astro.generator} />
@@ -110,9 +110,9 @@ const {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    window.localStorage.setItem('theme', theme);
+    try { window.localStorage.setItem('theme', theme); } catch (e) {}
   };
-  
+
   setDarkMode();
   document.addEventListener('astro:after-swap', setDarkMode);
 </script>

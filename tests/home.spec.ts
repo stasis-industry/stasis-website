@@ -18,10 +18,10 @@ test.describe('MAFIS Homepage', () => {
     test('hero section should display main calls to action', async ({ page }) => {
         await page.goto('/');
 
-        const thesisButton = page.getByRole('link', { name: /Read the thesis/i });
+        const researchButton = page.getByRole('link', { name: /Explore the research/i });
         const simulatorButton = page.getByRole('link', { name: /Try Simulator/i });
 
-        await expect(thesisButton).toBeVisible();
+        await expect(researchButton).toBeVisible();
         await expect(simulatorButton).toBeVisible();
     });
 
@@ -50,11 +50,11 @@ test.describe('MAFIS Homepage', () => {
         await expect(thesisScenes).toHaveCount(4, { timeout: 15000 });
     });
 
-    test('scorecard should display Robustness metric', async ({ page }) => {
+    test('scorecard should display Fault Tolerance metric', async ({ page }) => {
         await page.goto('/');
 
-        const robustness = page.getByText('Robustness');
-        await expect(robustness).toBeVisible();
+        const faultTolerance = page.getByText('Fault Tolerance');
+        await expect(faultTolerance).toBeVisible();
     });
 
     test('cascade section should have canvas and depth text', async ({ page }) => {

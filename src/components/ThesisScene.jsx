@@ -122,6 +122,7 @@ function SingleGrid({ label, variant, isPlaying }) {
 
     const ctx = canvas.getContext('2d');
     const sparkCtx = sparkCanvas.getContext('2d');
+    if (!ctx || !sparkCtx) return;
     const dpr = window.devicePixelRatio || 1;
 
     function resize() {

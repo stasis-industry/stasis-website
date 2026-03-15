@@ -174,7 +174,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
                 <span class="pillar-line" style="background:#3DB8E8;"></span>Entity Component System
               </h3>
               <p class="pillar-text">
-                Built on <a href="https://bevyengine.org/" target="_blank" class="bevy-link"><strong>Bevy</strong></a> — data-oriented, cache-friendly, parallelizable. Fault injection, heat propagation, and replanning compose without coupling.
+                Built on <a href="https://bevyengine.org/" target="_blank" rel="noopener noreferrer" class="bevy-link"><strong>Bevy</strong></a> — data-oriented, cache-friendly, parallelizable. Fault injection, heat propagation, and replanning compose without coupling.
               </p>
             </div>
           </div>
@@ -231,7 +231,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
         </div>
 
         <p class="bevy-credit fade-in-up">
-          Powered by <a href="https://bevyengine.org/" target="_blank" class="bevy-credit-link">Bevy</a> — an open-source engine driven by an extraordinary community of contributors.
+          Powered by <a href="https://bevyengine.org/" target="_blank" rel="noopener noreferrer" class="bevy-credit-link">Bevy</a> — an open-source engine driven by an extraordinary community of contributors.
         </p>
       </div>
     </section>
@@ -263,7 +263,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
             <p class="eco-text">
               We do not track algorithm baseline performances. For state-of-the-art algorithmic comparisons and the definitive leaderboard of solvers, we proudly refer researchers to the community-maintained <strong>MAPF Tracker</strong>.
             </p>
-            <a href="https://tracker.pathfinding.ai/" target="_blank" class="eco-link">Visit MAPF Tracker ↗</a>
+            <a href="https://tracker.pathfinding.ai/" target="_blank" rel="noopener noreferrer" class="eco-link">Visit MAPF Tracker ↗</a>
           </div>
 
           <div class="eco-card">
@@ -289,7 +289,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
             <p class="eco-text">
               We do not host rigid instance sets. For standardized 2D grid test environments (cities, games, mazes) and standard scenarios, please consult the <strong>MovingAI MAPF Benchmarks</strong> suite.
             </p>
-            <a href="https://movingai.com/benchmarks/mapf.html" target="_blank" class="eco-link">View MovingAI Benchmarks ↗</a>
+            <a href="https://movingai.com/benchmarks/mapf.html" target="_blank" rel="noopener noreferrer" class="eco-link">View MovingAI Benchmarks ↗</a>
           </div>
 
           <div class="eco-card">
@@ -316,7 +316,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
             <p class="eco-text">
               We specialize in abstract chaos mechanics. To bridge the gap between MAPF logic and real-world robotics scaling, we highly recommend the <strong>SMART MAPF</strong> scalable realistic testbed.
             </p>
-            <a href="https://smart-mapf.github.io/demo/" target="_blank" class="eco-link">Explore SMART MAPF ↗</a>
+            <a href="https://smart-mapf.github.io/demo/" target="_blank" rel="noopener noreferrer" class="eco-link">Explore SMART MAPF ↗</a>
           </div>
         </div>
       </div>
@@ -328,7 +328,7 @@ import CascadeScene from '../components/CascadeScene.jsx';
         <span class="footer-copy">&copy; 2026 Stasis AI</span>
         <div class="footer-links">
           <a href="/about">Story</a>
-          <a href="https://github.com/stasisai" target="_blank">GitHub</a>
+          <a href="https://github.com/stasisai" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </div>
     </footer>
@@ -410,8 +410,8 @@ import CascadeScene from '../components/CascadeScene.jsx';
 
               const counters = statsSection.querySelectorAll('.counter');
               counters.forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-target'));
-                const start = parseInt(counter.getAttribute('data-start'));
+                const target = parseInt(counter.getAttribute('data-target') || '0', 10);
+                const start = parseInt(counter.getAttribute('data-start') || '0', 10);
                 const duration = 1500; // ms
                 const startTime = performance.now();
 
@@ -458,8 +458,8 @@ import CascadeScene from '../components/CascadeScene.jsx';
             if (entry.isIntersecting) {
               const counters = scorecard.querySelectorAll('.counter');
               counters.forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-target'));
-                const start = parseInt(counter.getAttribute('data-start'));
+                const target = parseInt(counter.getAttribute('data-target') || '0', 10);
+                const start = parseInt(counter.getAttribute('data-start') || '0', 10);
                 const format = counter.getAttribute('data-format');
                 const duration = 1500;
                 const startTime = performance.now();

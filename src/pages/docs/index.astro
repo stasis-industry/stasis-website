@@ -4,33 +4,26 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 <DocsLayout
   title="MAFIS Documentation"
-  description="Choose your path — conceptual documentation for researchers, or implementation details for developers building on MAFIS."
+  description="Research documentation for MAFIS — the fault resilience observatory for lifelong multi-agent systems."
   currentSlug=""
 >
-  <h2>For Researchers</h2>
+  <h2>Getting Started</h2>
   <p>
-    Understand MAFIS as a simulation platform. This section covers the theory and behavior of MAPF solvers,
-    the fault injection model, and how to design and replay experimental scenarios. No prior knowledge of
-    the codebase is required.
+    Learn what MAFIS is, why chaos engineering matters for multi-agent systems,
+    and how to install and run it locally.
   </p>
-  <ul>
-    <li><strong>Introduction:</strong> What MAFIS is and why chaos engineering matters for multi-agent systems.</li>
-    <li><strong>MAPF Solvers:</strong> Conceptual breakdown of A*, CBS, PIBT, and LaCAM — their trade-offs and failure modes.</li>
-    <li><strong>Fault Mechanics:</strong> How breakdown and heat faults propagate through agent networks.</li>
-    <li><strong>Scenarios:</strong> Loading scenario files and reproducing simulation runs deterministically.</li>
-  </ul>
   <p><a href="/docs/researchers/introduction">Start with the Introduction →</a></p>
 
-  <h2>For Developers</h2>
+  <h2>Research</h2>
   <p>
-    Extend, integrate, or contribute to the MAFIS codebase. This section covers the Rust/Bevy architecture,
-    ECS component design, and the data structures powering the grid and agent systems. Familiarity with
-    Rust and the Bevy game engine is assumed.
+    Understand MAFIS as a fault resilience observatory. This section covers the simulation model,
+    resilience scorecard, fault mechanics, task scheduling, and scenario configuration.
   </p>
   <ul>
-    <li><strong>Architecture:</strong> Stack overview, WASM build pipeline, and the JS↔Rust bridge.</li>
-    <li><strong>Quick Start:</strong> Get the simulator running locally in minutes.</li>
-    <li><strong>Engine & ECS:</strong> Core design patterns, agent component schemas, and grid data structures.</li>
+    <li><strong>Observatory:</strong> Simulation phases and the resilience scorecard.</li>
+    <li><strong>Fault Mechanics:</strong> How breakdown and heat faults propagate through agent networks.</li>
+    <li><strong>Schedulers:</strong> Task scheduling strategies and their impact on resilience.</li>
+    <li><strong>Scenarios:</strong> Loading scenario files and reproducing simulation runs deterministically.</li>
   </ul>
-  <p><a href="/docs/developers/getting-started/architecture">Start with the Architecture →</a></p>
+  <p><a href="/docs/researchers/observatory/simulation-phases">Explore the Observatory →</a></p>
 </DocsLayout>
