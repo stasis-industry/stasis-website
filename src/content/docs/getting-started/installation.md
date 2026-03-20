@@ -30,7 +30,7 @@ The desktop version has full performance — parallel computation via rayon, the
 
 2. **Clone the repository**
    ```bash
-   git clone https://github.com/stasisai/mafis.git
+   git clone https://github.com/stasis-industry/mafis.git
    cd mafis
    ```
 
@@ -85,7 +85,7 @@ cargo build --release --target wasm32-unknown-unknown
 
 # 2. Generate JS bindings
 wasm-bindgen --out-dir web --target web \
-  target/wasm32-unknown-unknown/release/mapf-fis-3d.wasm
+  target/wasm32-unknown-unknown/release/mafis.wasm
 
 # 3. Serve locally (opens on http://localhost:4000)
 basic-http-server web
