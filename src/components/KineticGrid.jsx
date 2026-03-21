@@ -557,14 +557,43 @@ function WebGLFallback() {
 
 export default function KineticGrid({ hideOverlay = false }) {
     const [webglReady, setWebglReady] = useState(false);
-    const handleCreated = useCallback(() => setWebglReady(true), []);
+    const [contextLost, setContextLost] = useState(false);
+    const canvasRef = useRef(null);
+
+    const handleCreated = useCallback((state) => {
+        setWebglReady(true);
+        // Listen for WebGL context loss to fail gracefully instead of error-looping
+        const canvas = state.gl.domElement;
+        canvasRef.current = state.gl;
+        canvas.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            setContextLost(true);
+        });
+    }, []);
+
+    // Dispose WebGL context on Astro view transitions to prevent context loss errors
+    useEffect(() => {
+        const dispose = () => {
+            if (canvasRef.current) {
+                canvasRef.current.dispose();
+                canvasRef.current = null;
+            }
+        };
+        document.addEventListener('astro:before-swap', dispose);
+        return () => {
+            document.removeEventListener('astro:before-swap', dispose);
+            dispose();
+        };
+    }, []);
 
     return (
         <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
-            {!webglReady && <WebGLFallback />}
+            {(!webglReady || contextLost) && <WebGLFallback />}
+            {!contextLost && (
             <Canvas camera={{ position: [0, 9, 11], fov: 38 }} style={{ background: 'transparent' }} onCreated={handleCreated}>
                 <Scene />
             </Canvas>
+            )}
             {!hideOverlay && (
                 <div style={{
                     position: 'absolute', bottom: '2.5rem', right: '2.5rem',
