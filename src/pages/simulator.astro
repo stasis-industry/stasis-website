@@ -50,7 +50,8 @@ import Layout from '../layouts/Layout.astro';
     allow="fullscreen"
   ></iframe>
 
-  <script>
+  <script is:inline>
+    // Run on every navigation (is:inline prevents Astro deduplication with ClientRouter)
     (async () => {
       try {
         const res = await fetch('/sim/index.html', { method: 'HEAD' });
