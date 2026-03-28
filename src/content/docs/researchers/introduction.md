@@ -17,7 +17,7 @@ Different solvers, fault types, and topologies produce different degradation and
 
 | Variable | Options |
 |---|---|
-| **Solver** | PIBT, RHCR (3 variants), Token Passing |
+| **Solver** | PIBT, RHCR (3 variants), Token Passing, RT-LaCAM, TPTS, PIBT+APF |
 | **Fault type** | Burst, Wear-based, Zone outage, Intermittent |
 | **Grid topology** | Warehouse Medium, Kiva Large, Sorting Center, Compact Grid |
 | **Agent density** | Configurable (slider) |

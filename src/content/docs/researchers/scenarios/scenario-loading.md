@@ -24,7 +24,7 @@ All randomness in MAFIS flows through a single seeded random number generator (C
 | **Agent count** | Slider | Number of agents spawned |
 | **Seed** | Input | RNG seed for reproducibility |
 | **Scheduler** | Random, Closest-first, Balanced, RoundTrip | Task assignment strategy |
-| **Solver** | PIBT, RHCR (3 variants), Token Passing | Path planning algorithm |
+| **Solver** | PIBT, RHCR (3 variants), Token Passing, RT-LaCAM, TPTS, PIBT+APF | Path planning algorithm |
 | **Fault intensity** | Off / Low / Medium / High | Fault frequency and severity |
 | **Baseline ticks** | Input (default: configurable) | Duration of headless fault-free baseline |
 | **Task limit** | Optional | Stop condition on total tasks completed |
