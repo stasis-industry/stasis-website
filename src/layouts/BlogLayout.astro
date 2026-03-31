@@ -1,0 +1,453 @@
+---
+import Layout from './Layout.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  author: string;
+  date: string;
+  readTime: number;
+  tags?: string[];
+  image?: string;
+  imageAlt?: string;
+  status: 'draft' | 'preliminary' | 'published';
+}
+
+const { title, description, author, date, readTime, tags = [], image, imageAlt, status } = Astro.props;
+
+const formattedDate = new Date(date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const statusLabel = {
+  draft: 'Draft',
+  preliminary: 'Preliminary · Not peer-reviewed',
+  published: 'Published',
+}[status];
+---
+
+<Layout title={`Stasis | ${title}`} description={description}>
+  <Header />
+
+  <main class="article-page">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+      <div class="breadcrumb-inner">
+        <a href="/blog" class="breadcrumb-back">← Research Notes</a>
+      </div>
+    </div>
+
+    <article class="article">
+      <div class="article-inner">
+
+        <!-- Header -->
+        <header class="article-header">
+          {status !== 'published' && (
+            <div class="status-banner">
+              <span class="status-dot"></span>
+              {statusLabel}
+            </div>
+          )}
+
+          <div class="article-meta">
+            <span class="meta-date">{formattedDate}</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-read">{readTime} min read</span>
+            {tags.length > 0 && (
+              <>
+                <span class="meta-sep">·</span>
+                <span class="meta-tags">{tags.join(', ')}</span>
+              </>
+            )}
+          </div>
+
+          <h1 class="article-title">{title}</h1>
+          <p class="article-description">{description}</p>
+
+          {image && (
+            <div class="article-image-wrap">
+              <img src={image} alt={imageAlt ?? title} class="article-image" loading="lazy" />
+            </div>
+          )}
+
+          <div class="article-byline">
+            <span class="byline-author">{author}</span>
+          </div>
+        </header>
+
+        <!-- Body (markdown rendered here) -->
+        <div class="article-body prose">
+          <slot />
+        </div>
+
+        <!-- Footer -->
+        <footer class="article-footer">
+          <div class="footer-row">
+            <span class="footer-label">STATUS</span>
+            <span class="footer-value">{statusLabel}</span>
+          </div>
+          <div class="footer-row">
+            <span class="footer-label">AUTHOR</span>
+            <span class="footer-value">{author}</span>
+          </div>
+          <div class="footer-row">
+            <span class="footer-label">DATA</span>
+            <a href="https://github.com/stasis-industries/mafis" target="_blank" rel="noopener noreferrer" class="footer-link">
+              github.com/stasis-industries/mafis ↗
+            </a>
+          </div>
+          <div class="footer-nav">
+            <a href="/blog" class="footer-back">← All research notes</a>
+          </div>
+        </footer>
+
+      </div>
+    </article>
+
+    <!-- Page footer -->
+    <footer class="page-footer">
+      <div class="page-footer-inner">
+        <span class="footer-copy">&copy; 2026 Stasis</span>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/docs">Docs</a>
+          <a href="/simulator">Simulator</a>
+          <a href="https://github.com/stasis-industries/mafis" target="_blank" rel="noopener noreferrer">Github ↗</a>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+</Layout>
+
+<style>
+  /* ─── Page Shell ──────────────────────────────────────── */
+  .article-page {
+    background: var(--bg);
+    color: var(--text);
+    padding-top: 70px;
+    min-height: 100vh;
+  }
+
+  /* ─── Breadcrumb ──────────────────────────────────────── */
+  .breadcrumb-bar {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+  }
+  .breadcrumb-inner { max-width: 720px; margin: 0 auto; }
+  .breadcrumb-back {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-sec);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .breadcrumb-back:hover { color: var(--text); }
+
+  /* ─── Article Shell ───────────────────────────────────── */
+  .article { padding: 0 24px; }
+  .article-inner { max-width: 720px; margin: 0 auto; }
+
+  /* ─── Header ──────────────────────────────────────────── */
+  .article-header {
+    padding: 56px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 52px;
+  }
+
+  .status-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-sec);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    margin-bottom: 24px;
+  }
+  .status-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #E8862A;
+    flex-shrink: 0;
+    animation: pulse 2.5s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  .article-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-sec);
+    letter-spacing: 0.04em;
+  }
+  .meta-sep { opacity: 0.3; }
+  .meta-tags { opacity: 0.6; }
+
+  .article-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .article-description {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-sec);
+    max-width: 600px;
+    margin-bottom: 24px;
+  }
+
+  .article-image-wrap {
+    margin: 32px 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .article-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .article-byline {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.6;
+  }
+
+  /* ─── Body / Prose ────────────────────────────────────── */
+  .prose { padding-bottom: 64px; border-bottom: 1px solid var(--border); }
+
+  .prose :global(h2) {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text);
+    opacity: 0.45;
+    margin: 52px 0 20px;
+  }
+  .prose :global(h2:first-child) { margin-top: 0; }
+
+  .prose :global(h3) {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    opacity: 0.6;
+    margin: 36px 0 16px;
+  }
+
+  .prose :global(p) {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .prose :global(strong) { font-weight: 500; }
+  .prose :global(em) { font-style: italic; opacity: 0.75; }
+
+  .prose :global(a) {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: opacity 0.2s;
+  }
+  .prose :global(a:hover) { opacity: 0.6; }
+
+  /* Tables */
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    margin: 28px 0;
+    display: block;
+    overflow-x: auto;
+  }
+  .prose :global(thead tr) {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .prose :global(th) {
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-sec);
+    text-align: left;
+    padding: 12px 16px;
+    white-space: nowrap;
+  }
+  .prose :global(td) {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .prose :global(tr:last-child td) { border-bottom: none; }
+  /* Bold rows in markdown tables (** wrapping) */
+  .prose :global(td strong), .prose :global(th strong) {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Code */
+  .prose :global(code) {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+  }
+  .prose :global(pre) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 24px 0;
+  }
+  .prose :global(pre code) {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  /* Blockquote */
+  .prose :global(blockquote) {
+    border-left: 2px solid var(--border);
+    padding-left: 20px;
+    margin: 28px 0;
+    font-family: var(--sans);
+    font-style: italic;
+    opacity: 0.65;
+  }
+
+  /* Images in body */
+  .prose :global(img) {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    display: block;
+    margin: 28px 0;
+  }
+
+  /* Footnotes / italics after tables */
+  .prose :global(p em:only-child) {
+    font-size: 0.85rem;
+    opacity: 0.5;
+    display: block;
+    margin-top: -16px;
+    margin-bottom: 24px;
+  }
+
+  /* ─── Article Footer ──────────────────────────────────── */
+  .article-footer {
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .footer-row {
+    display: flex;
+    gap: 20px;
+    align-items: baseline;
+  }
+  .footer-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-sec);
+    width: 60px;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+  .footer-value {
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 0.9rem;
+    color: var(--text-sec);
+  }
+  .footer-link {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-sec);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-link:hover { color: var(--text); }
+  .footer-nav { margin-top: 8px; }
+  .footer-back {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-sec);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-back:hover { color: var(--text); }
+
+  /* ─── Page Footer ─────────────────────────────────────── */
+  .page-footer { border-top: 1px solid var(--border); padding: 32px 24px; }
+  .page-footer-inner {
+    max-width: 720px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-copy {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-sec); letter-spacing: 0.04em;
+  }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-sec); text-decoration: none;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  /* ─── Responsive ──────────────────────────────────────── */
+  @media (min-width: 768px) {
+    .breadcrumb-bar { padding: 14px 32px; }
+    .article { padding: 0 32px; }
+    .article-header { padding: 72px 0 56px; }
+    .page-footer { padding: 32px 32px; }
+  }
+  @media (max-width: 600px) {
+    .article-meta { gap: 6px; font-size: 10px; }
+    .page-footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>

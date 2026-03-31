@@ -105,4 +105,4 @@ Navigation is hardcoded in `DocsLayout.astro`'s `navGroups` array.
 Two GitHub Actions workflows:
 
 - **`ci.yml`**: Runs on push/PR to `main` and `dev`. `npm audit` security scan → build → Playwright E2E (Chromium only, against the production build). Node 22.
-- **`rebuild-on-wasm.yml`**: Triggered by `repository_dispatch` from `stasis-industry/mafis` (event type `wasm-updated`) or manually. Downloads `mafis-wasm.tar.gz` from a GitHub release into `public/simulator/`, rebuilds, runs E2E tests, then deploys to Vercel production (`vercel deploy --prebuilt --prod`). Requires secrets: `SIMULATOR_READ_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- **`rebuild-on-wasm.yml`**: Triggered by `repository_dispatch` from `stasis-industries/mafis` (event type `wasm-updated`) or manually. Downloads `mafis-wasm.tar.gz` from a GitHub release into `public/simulator/`, rebuilds, runs E2E tests, then deploys to Vercel production (`vercel deploy --prebuilt --prod`). Requires secrets: `SIMULATOR_READ_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.

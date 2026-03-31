@@ -30,7 +30,7 @@ The desktop version has full performance: parallel computation via rayon, the co
 
 2. **Clone the repository**
    ```bash
-   git clone https://github.com/stasis-industry/mafis.git
+   git clone https://github.com/stasis-industries/mafis.git
    cd mafis
    ```
 

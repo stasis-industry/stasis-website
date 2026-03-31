@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-REPO="stasis-industry/mafis"
+REPO="stasis-industries/mafis"
 DEST="public/sim"
 TAG="${1:-latest}"
 
