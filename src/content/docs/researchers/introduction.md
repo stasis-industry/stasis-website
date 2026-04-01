@@ -17,7 +17,7 @@ Different solvers, fault types, and topologies produce different degradation and
 
 | Variable | Options |
 |---|---|
-| **Solver** | PIBT, PIBT+APF, RHCR (PBS, PIBT-Window, Priority A*), Token Passing, TPTS, RT-LaCAM |
+| **Solver** | PIBT, RHCR (PBS, PIBT-Window, Priority A*), Token Passing, TPTS, RT-LaCAM |
 | **Fault type** | Burst, Wear-based (Weibull), Zone outage, Intermittent, Permanent zone outage |
 | **Grid topology** | Warehouse Medium, Warehouse Large, Compact Grid, Kiva Warehouse, Sorting Center, Fulfillment Center |
 | **Agent density** | Configurable (up to 500 agents) |

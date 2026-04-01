@@ -7,9 +7,9 @@ const ITEMS = [
     bullets: ['Recoverable: temporary blockage', 'Permanent-distributed: overheat', 'Permanent-localized: zone outage'],
     visual: 'taxonomy' },
   { id: 'solvers', num: '02', label: 'Solvers',
-    title: 'Eight lifelong solvers',
-    desc: 'All lifelong-capable. Five paradigms for sustained operation.',
-    bullets: ['PIBT, PIBT+APF: reactive', 'RHCR: three windowed planner variants', 'Token Passing, TPTS: decentralized', 'RT-LaCAM: config-space search'],
+    title: 'Seven lifelong solvers',
+    desc: 'All lifelong-capable. Four paradigms for sustained operation.',
+    bullets: ['PIBT: reactive', 'RHCR: three windowed planner variants', 'Token Passing, TPTS: decentralized', 'RT-LaCAM: config-space search'],
     visual: 'solvers' },
   { id: 'topologies', num: '03', label: 'Topologies',
     title: 'Six warehouse maps',
@@ -57,7 +57,6 @@ function TaxonomySvg() {
 function SolversSvg() {
   const solvers = [
     { name: 'PIBT', w: 200, color: C.teal },
-    { name: 'PIBT+APF', w: 190, color: C.teal },
     { name: 'RHCR-PBS', w: 170, color: C.amber },
     { name: 'RHCR-PIBT', w: 180, color: C.amber },
     { name: 'RHCR-A*', w: 160, color: C.amber },
