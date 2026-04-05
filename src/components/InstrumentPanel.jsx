@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 
 const ITEMS = [
   { id: 'fault-taxonomy', num: '01', label: 'Fault Taxonomy',
-    title: 'Three fault categories',
-    desc: 'Each category tests a different failure mode.',
-    bullets: ['Recoverable: temporary blockage', 'Permanent-distributed: overheat', 'Permanent-localized: zone outage'],
+    title: 'Four fault types, two categories',
+    desc: 'Each type tests a different failure mode.',
+    bullets: ['Recoverable: spatial zone outage, intermittent', 'Permanent: burst failure, Weibull wear'],
     visual: 'taxonomy' },
   { id: 'solvers', num: '02', label: 'Solvers',
     title: 'Seven lifelong solvers',
@@ -41,15 +41,12 @@ const C = {
 function TaxonomySvg() {
   return (
     <svg width="280" height="120" viewBox="0 0 280 120">
-      <rect x="10" y="25" width="70" height="70" fill="none" stroke={C.teal} strokeWidth="2" />
-      <text x="45" y="67" textAnchor="middle" fill={C.teal} fontFamily="var(--mono)" fontSize="24" fontWeight="600">R</text>
-      <text x="45" y="110" textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">RECOVERABLE</text>
-      <rect x="105" y="25" width="70" height="70" fill="none" stroke={C.amber} strokeWidth="2" />
-      <text x="140" y="67" textAnchor="middle" fill={C.amber} fontFamily="var(--mono)" fontSize="24" fontWeight="600">PD</text>
-      <text x="140" y="110" textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">PERM-DIST</text>
-      <rect x="200" y="25" width="70" height="70" fill="none" stroke={C.red} strokeWidth="2" />
-      <text x="235" y="67" textAnchor="middle" fill={C.red} fontFamily="var(--mono)" fontSize="24" fontWeight="600">PL</text>
-      <text x="235" y="110" textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">PERM-LOCAL</text>
+      <rect x="35" y="25" width="90" height="70" fill="none" stroke={C.teal} strokeWidth="2" />
+      <text x="80" y="63" textAnchor="middle" fill={C.teal} fontFamily="var(--mono)" fontSize="20" fontWeight="600">REC</text>
+      <text x="80" y="110" textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">RECOVERABLE</text>
+      <rect x="155" y="25" width="90" height="70" fill="none" stroke={C.amber} strokeWidth="2" />
+      <text x="200" y="63" textAnchor="middle" fill={C.amber} fontFamily="var(--mono)" fontSize="20" fontWeight="600">PERM</text>
+      <text x="200" y="110" textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">PERMANENT</text>
     </svg>
   );
 }
