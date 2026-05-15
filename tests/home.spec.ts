@@ -64,7 +64,10 @@ test.describe('MAFIS Homepage', () => {
         // client:only="react" component needs extra time to hydrate
         await expect(cascadeCanvas).toHaveCount(1, { timeout: 15000 });
 
-        const depthText = page.getByText('CASCADE DEPTH');
+        // Scope to the cascade scene mini-scoreboard. The differential-metrics
+        // scorecard in the observatory section also has a "Cascade Depth" row
+        // and would otherwise trigger a strict-mode locator collision.
+        const depthText = page.locator('#cascade-scene').getByText('CASCADE DEPTH', { exact: true });
         await expect(depthText).toBeVisible();
     });
 
