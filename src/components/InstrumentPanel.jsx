@@ -4,32 +4,22 @@ const ITEMS = [
   { id: 'fault-taxonomy', num: '01', label: 'Fault Taxonomy',
     title: 'Four fault types, two categories',
     desc: 'Each type tests a different failure mode.',
-    bullets: ['Recoverable: spatial zone outage, intermittent', 'Permanent: burst failure, Weibull wear'],
+    bullets: ['Recoverable: zone outage, intermittent latency', 'Permanent: burst failure, Weibull wear'],
     visual: 'taxonomy' },
-  { id: 'solvers', num: '02', label: 'Solvers',
-    title: 'Seven lifelong solvers',
-    desc: 'All lifelong-capable. Four paradigms for sustained operation.',
-    bullets: ['PIBT: reactive', 'RHCR: three windowed planner variants', 'Token Passing, TPTS: decentralized', 'RT-LaCAM: config-space search'],
-    visual: 'solvers' },
-  { id: 'topologies', num: '03', label: 'Topologies',
-    title: 'Six warehouse maps',
-    desc: 'Cross-topology validation built in.',
-    bullets: ['Warehouse Medium 30\u00D715', 'Warehouse Large 57\u00D733', 'Compact Grid 26\u00D726', 'Kiva Warehouse 48\u00D748', 'Sorting Center 45\u00D720', 'Fulfillment Center 54\u00D724'],
-    visual: 'topologies' },
-  { id: 'baseline', num: '04', label: 'Baseline Model',
-    title: 'Dual-twin baseline',
-    desc: 'Every metric is a deviation from a fault-free reference.',
-    bullets: ['Fault-free baseline in parallel', 'Delta = research output', 'Same seed = identical reference'],
+  { id: 'baseline', num: '02', label: 'Baseline Model',
+    title: 'Same seed, two runs',
+    desc: 'Every metric is the difference between a fault-free run and a faulted run sharing the same seed.',
+    bullets: ['Fault-free baseline computed in parallel', 'The difference is the result you measure', 'Same seed means an identical reference'],
     visual: 'baseline' },
-  { id: 'cascade', num: '05', label: 'Cascade Tracing',
-    title: 'ADG + BFS propagation',
-    desc: 'Full transitive closure of each fault event.',
-    bullets: ['Action Dependency Graph every tick', 'BFS measures depth and spread', 'MTTR per affected agent'],
+  { id: 'cascade', num: '03', label: 'Cascade Tracing',
+    title: 'Tracing which agents the fault touched',
+    desc: 'Each fault event walks the agent dependency graph to find the agents that depended on the failed one.',
+    bullets: ['Dependency graph rebuilt every tick', 'Breadth-first search measures depth and spread', 'Recovery time tracked per affected agent'],
     visual: 'cascade' },
-  { id: 'reproducibility', num: '06', label: 'Reproducibility',
+  { id: 'reproducibility', num: '04', label: 'Reproducibility',
     title: 'Seeded determinism',
-    desc: 'Same seed + config = identical simulation.',
-    bullets: ['SeededRng for all random events', 'Bit-exact replay from any tick', 'Export seed with every result'],
+    desc: 'Same seed and config produce an identical simulation.',
+    bullets: ['One seeded RNG drives all random events', 'Bit-exact replay from any tick', 'Seed is exported with every result'],
     visual: 'reproducibility' },
 ];
 
@@ -47,58 +37,6 @@ function TaxonomySvg() {
       <rect x="155" y="25" width="90" height="70" fill="none" stroke={C.amber} strokeWidth="2" />
       <text x="200" y="63" textAnchor="middle" fill={C.amber} fontFamily="var(--mono)" fontSize="20" fontWeight="600">PERM</text>
       <text x="200" y="110" textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">PERMANENT</text>
-    </svg>
-  );
-}
-
-function SolversSvg() {
-  const solvers = [
-    { name: 'PIBT', w: 200, color: C.teal },
-    { name: 'RHCR-PBS', w: 170, color: C.amber },
-    { name: 'RHCR-PIBT', w: 180, color: C.amber },
-    { name: 'RHCR-A*', w: 160, color: C.amber },
-    { name: 'TOKEN', w: 140, color: C.green },
-    { name: 'TPTS', w: 150, color: C.green },
-    { name: 'RT-LaCAM', w: 175, color: C.red },
-  ];
-  return (
-    <svg width="280" height="180" viewBox="0 0 280 180">
-      {solvers.map((s, i) => (
-        <g key={s.name}>
-          <rect x="80" y={8 + i * 21} width={s.w} height="15" fill={s.color} opacity="0.2" />
-          <rect x="80" y={8 + i * 21} width={s.w} height="15" fill="none" stroke={s.color} strokeWidth="1" opacity="0.5" />
-          <text x="72" y={8 + i * 21 + 11} textAnchor="end" fill={C.textSec} fontFamily="var(--mono)" fontSize="9">{s.name}</text>
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-function TopologiesSvg() {
-  const labels = ['WH-MED', 'WH-LG', 'COMPACT', 'KIVA', 'SORT-CTR', 'FULFILL'];
-  const patterns = [
-    [[0,0],[0,2],[0,4],[2,0],[2,2],[2,4],[4,0],[4,2],[4,4]],
-    [[0,0],[0,1],[0,3],[0,4],[1,0],[1,4],[3,0],[3,4],[4,0],[4,1],[4,3],[4,4]],
-    [[0,0],[0,1],[0,2],[0,3],[0,4],[1,0],[1,4],[2,0],[2,4],[3,0],[3,4],[4,0],[4,1],[4,2],[4,3],[4,4]],
-    [[0,0],[0,2],[0,4],[1,1],[1,3],[2,0],[2,2],[2,4],[3,1],[3,3],[4,0],[4,2],[4,4]],
-    [[0,0],[1,1],[2,2],[3,3],[4,4],[0,4],[4,0]],
-    [[0,0],[0,4],[1,2],[2,0],[2,4],[3,2],[4,0],[4,4]],
-  ];
-  return (
-    <svg width="280" height="200" viewBox="0 0 280 200">
-      {[0,1,2,3,4,5].map(idx => {
-        const col = idx % 2, row = Math.floor(idx / 2);
-        const ox = 20 + col * 140, oy = 10 + row * 66;
-        return (
-          <g key={idx}>
-            <rect x={ox} y={oy} width="110" height="45" fill="none" stroke={C.border} strokeWidth="1" />
-            {patterns[idx].map((p, pi) => (
-              <rect key={pi} x={ox + 8 + p[1] * 18} y={oy + 4 + p[0] * 7} width="8" height="5" fill={C.teal} opacity="0.4" />
-            ))}
-            <text x={ox + 55} y={oy + 58} textAnchor="middle" fill={C.textSec} fontFamily="var(--mono)" fontSize="7">{labels[idx]}</text>
-          </g>
-        );
-      })}
     </svg>
   );
 }
@@ -178,8 +116,10 @@ function ReproducibilitySvg() {
 }
 
 const VISUALS = {
-  taxonomy: TaxonomySvg, solvers: SolversSvg, topologies: TopologiesSvg,
-  baseline: BaselineSvg, cascade: CascadeSvg, reproducibility: ReproducibilitySvg,
+  taxonomy: TaxonomySvg,
+  baseline: BaselineSvg,
+  cascade: CascadeSvg,
+  reproducibility: ReproducibilitySvg,
 };
 
 const BOTTOM_BAR_COLORS_DARK = ['rgba(60,60,60,0.3)', 'rgba(60,60,60,0.15)', 'rgba(60,60,60,0.3)', 'rgba(60,60,60,0.15)', 'rgba(60,60,60,0.3)'];

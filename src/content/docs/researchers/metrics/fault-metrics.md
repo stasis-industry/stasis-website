@@ -5,6 +5,21 @@ description: The metrics MAFIS computes during fault injection, where each comes
 
 MAFIS computes fault metrics during the fault injection phase. Each metric is measured against the fault-free baseline, so results are comparative, not absolute. The primary research variables swept against these metrics are **scheduler strategy**, **fault intensity**, and **grid topology**.
 
+## The Six Primary Experiment Metrics
+
+MAFIS defines six primary differential metrics for batch experiment reporting:
+
+| Metric | Unit | Direction |
+|---|---|---|
+| **Fault Tolerance (FT)** | Ratio (0–∞) | Higher is better |
+| **Critical Time (CT)** | Ratio (0–1) | Lower is better |
+| **ITAE** | Tick-weighted error | Lower is better |
+| **Attack Rate (AR)** | Ratio (0–1) | Lower is better |
+| **Cascade Depth** | Levels (integer) | Lower is better |
+| **Rapidity** | Ticks (recoverable only) | Lower is better |
+
+All six are computed by the headless experiment runner and exported to CSV/JSON. The live observatory scorecard (FT, NRR, Critical Time, Composite Score) is a separate real-time context. See [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard).
+
 ---
 
 ## MTTR (Mean Time To Recovery)
@@ -87,6 +102,68 @@ The total number of agents affected by a single fault event, not chain length, b
 
 ---
 
+## ITAE (Integral Time-weighted Absolute Error)
+
+**Unit:** Tick-weighted error | **Lower is better** | **Experiment metric**
+
+Time-weighted integral of the throughput ratio error after the first fault. Gives more weight to deviations that persist later into the run, penalizing slow recovery more than a brief initial dip.
+
+$$ITAE = \sum_{t > t_f} (t - t_f) \cdot |1 - R(t)|$$
+
+Where $R(t) = P_{\text{live}}(t) / P_{\text{baseline}}(t)$ and $t_f$ is the first fault tick.
+
+**Origin:** Ogata (2010), *Modern Control Engineering*, 5th ed. The ITAE criterion is a standard integral performance index in control systems, adapted here for throughput ratio tracking. NaN if no fault fires in the run.
+
+**Why it matters:** ITAE captures both the magnitude and duration of performance loss in a single number. Two systems can have identical average throughput deficit but very different ITAE if one recovers early and one lingers near the fault level. ITAE rewards fast recovery disproportionately.
+
+**Real-life example:** A warehouse fleet drops to 70% throughput after a fault. Fleet A recovers to 95% within 20 ticks. Fleet B stays at 80% for 200 ticks. Fleet A has a much lower ITAE — the brief, early dip accumulates far less time-weighted error than the prolonged plateau.
+
+> [!TIP] **Reading it:** ITAE = 0 means perfect throughput retention after the fault. ITAE grows with both depth of degradation and recovery time. Compare across configurations with identical fault intensity.
+
+---
+
+## Attack Rate (AR)
+
+**Unit:** Ratio (0–1) | **Lower is better** | **Experiment metric**
+
+Fraction of the initial fleet that was *ever* directly killed or cascade-affected by any fault during the entire run.
+
+$$AR = \frac{|\text{ever-affected agents}|}{|\text{initial fleet}|}$$
+
+An agent is counted as ever-affected if it was directly killed by a fault or reached by the ADG cascade BFS at any fault event. Each agent is counted at most once regardless of how many fault events touched it.
+
+**Origin:** Adapted from Wallinga & Lipsitch (2007), *"How generation intervals shape the relationship between growth rates and reproductive numbers"*. The attack rate concept from epidemiology — fraction of a population that contracts a disease during an outbreak — maps directly to the fraction of a fleet ever disrupted by fault propagation.
+
+**Why it matters:** Attack Rate separates *isolated* faults (AR close to 0) from *system-wide* faults (AR close to 1). A burst fault that kills 10% of the fleet but cascades to another 30% has AR = 0.40, not 0.10. Comparing AR across topologies reveals which layouts provide natural fault isolation.
+
+**Real-life example:** A 100-robot fleet runs a wear-based scenario. 8 robots die from Weibull failures. Their deaths cascade through the ADG, affecting 22 additional robots via replanning chains. AR = 0.30, meaning 30 robots were touched by fault effects. A parallel-corridor topology might reduce this to AR = 0.12.
+
+> [!TIP] **Interpretation:** AR near 0 = faults are well-contained. AR near 1 = faults sweep the entire fleet. Used alongside Cascade Depth to distinguish wide-but-shallow cascades from narrow-but-deep ones.
+
+---
+
+## Rapidity
+
+**Unit:** Ticks | **Lower is better** | **Experiment metric (recoverable faults only)**
+
+Number of ticks from the first fault until the system sustains throughput at or above 90% of baseline for 5 consecutive ticks.
+
+$$\text{Rapidity} = T_{\text{rec}}(\rho = 0.90)$$
+
+Where $T_{\text{rec}}$ is the first tick such that $R(t) \geq 0.90$ for all $t$ in $[T_{\text{rec}}, T_{\text{rec}}+4]$.
+
+**Origin:** Bruneau et al. (2003), *"A Framework to Quantitatively Assess and Enhance the Seismic Resilience of Communities"*, which defines rapidity as the rate of recovery — adapted here as the time to sustained 90% recovery threshold.
+
+**NaN for permanent faults:** Wear-based and burst fault scenarios cause permanent deaths. If the fleet never sustains ≥90% throughput for 5 consecutive ticks, Rapidity is undefined (NaN). It is meaningful primarily for zone outage and intermittent fault scenarios where agents can recover.
+
+**Why it matters:** Rapidity directly answers "how fast does this system bounce back?" A fleet with low ITAE but high Rapidity recovered slowly over a long tail. A fleet with high ITAE but low Rapidity dropped hard and came back fast. Both dimensions are needed.
+
+**Real-life example:** After a zone outage clears, a PIBT fleet recovers to ≥90% baseline throughput in 47 ticks. An RHCR fleet recovers in 31 ticks. Rapidity = 47 vs 31. The difference reflects how quickly each solver's replanning propagates through the fleet after the blockage resolves.
+
+> [!TIP] **Reading it:** Compare within the same fault scenario type. Don't compare Rapidity across permanent vs. temporary fault runs — it's NaN for permanent deaths by design.
+
+---
+
 ## Propagation Rate (Observatory Only)
 
 **Unit:** Ratio (0–1) | **Lower is better**
@@ -153,9 +230,11 @@ Fraction of agents still alive (not permanently broken down) at each tick.
 
 ---
 
-## How Metrics Feed the Scorecard
+## How Metrics Feed the Scorecard and Experiment Reports
 
-These raw metrics flow into the [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard):
+These raw metrics feed two distinct output contexts:
+
+### Live Observatory Scorecard
 
 | Raw Metric | Feeds Into |
 |---|---|
@@ -164,3 +243,18 @@ These raw metrics flow into the [Resilience Scorecard](/docs/researchers/observa
 | Fleet attrition | Survival Rate (SR) |
 | Throughput below threshold | Critical Time (CT) |
 | ADG BFS on fault events | Cascade Depth + Cascade Spread |
+
+See [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard) for the live composite score.
+
+### Experiment Reports (Six Primary Metrics)
+
+| Raw Metric | Differential Metric |
+|---|---|
+| Baseline-differential throughput | Fault Tolerance (FT) |
+| Ticks below 50% baseline | Critical Time (CT) |
+| Time-weighted throughput error integral | ITAE |
+| Ever-affected agent count / initial fleet | Attack Rate (AR) |
+| ADG BFS depth across fault events | Cascade Depth |
+| Ticks to ≥90% sustained recovery | Rapidity |
+
+These six are computed by the headless experiment runner and exported for offline analysis.

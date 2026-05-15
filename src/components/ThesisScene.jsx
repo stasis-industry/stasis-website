@@ -228,14 +228,25 @@ function SingleGrid({ label, variant, isPlaying }) {
       const { gridPx, cellPx, agentR } = sizeRef.current;
       const C = isDarkRef.current ? COLORS_DARK : COLORS_LIGHT;
 
-      ctx.fillStyle = C.canvasBg;
-      ctx.fillRect(0, 0, gridPx, gridPx);
+      ctx.clearRect(0, 0, gridPx, gridPx);
 
-      ctx.strokeStyle = C.gridLine;
+      // Grid lines with fade-out at endpoints (no hard border)
       ctx.lineWidth = 1;
-      for (let i = 0; i <= GRID_SIZE; i++) {
-        ctx.beginPath(); ctx.moveTo(i * cellPx, 0); ctx.lineTo(i * cellPx, gridPx); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, i * cellPx); ctx.lineTo(gridPx, i * cellPx); ctx.stroke();
+      const drawFadingLine = (x0, y0, x1, y1) => {
+        const grad = ctx.createLinearGradient(x0, y0, x1, y1);
+        grad.addColorStop(0,    'rgba(0,0,0,0)');
+        grad.addColorStop(0.18, C.gridLine);
+        grad.addColorStop(0.82, C.gridLine);
+        grad.addColorStop(1,    'rgba(0,0,0,0)');
+        ctx.strokeStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      };
+      for (let i = 1; i < GRID_SIZE; i++) {
+        drawFadingLine(i * cellPx, 0, i * cellPx, gridPx);
+        drawFadingLine(0, i * cellPx, gridPx, i * cellPx);
       }
 
       // Agents (no tile highlight, fault is shown as a dead robot)
@@ -345,9 +356,8 @@ function SingleGrid({ label, variant, isPlaying }) {
       }}>{label}</span>
 
       <div style={{
-        background: 'var(--thesis-grid-bg, #E2DED8)',
-        border: '1px solid var(--thesis-grid-border, rgba(0,0,0,0.08))',
-        borderRadius: 8,
+        background: 'transparent',
+        border: 'none',
         overflow: 'hidden',
         width: '100%',
       }}>

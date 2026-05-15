@@ -68,11 +68,11 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
       <div class="section-inner">
         <div class="observatory-text fade-in-up">
           <span class="section-label">THE OBSERVATORY</span>
-          <h2 class="observatory-title">Two phases. Four metrics. One resilience <em>profile.</em></h2>
+          <h2 class="observatory-title">Two phases. Six metrics. One resilience <em>profile.</em></h2>
           <p class="observatory-desc">
             Every MAFIS run computes a fault-free baseline instantly,
             then runs the live simulation with faults active from tick one.
-            The delta between clean and degraded performance is the research output.
+            The difference between the two runs is what you measure.
           </p>
         </div>
 
@@ -81,22 +81,32 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
         </div>
 
         <div class="scorecard" id="resilience-scorecard">
-          <h4 class="scorecard-title">RESILIENCE SCORECARD</h4>
-          <div class="scorecard-metric">
-            <span class="scorecard-metric-label">Fault Tolerance</span>
-            <span class="scorecard-metric-value sc-green"><span class="counter" data-target="82" data-start="0" data-format="decimal">0</span></span>
-          </div>
-          <div class="scorecard-metric">
-            <span class="scorecard-metric-label">NRR</span>
-            <span class="scorecard-metric-value sc-blue"><span class="counter" data-target="91" data-start="0" data-format="decimal">0</span></span>
-          </div>
-          <div class="scorecard-metric">
-            <span class="scorecard-metric-label">Survival Rate</span>
-            <span class="scorecard-metric-value sc-orange"><span class="counter" data-target="88" data-start="0" data-format="decimal">0</span></span>
-          </div>
-          <div class="scorecard-metric">
-            <span class="scorecard-metric-label">Critical Time</span>
-            <span class="scorecard-metric-value sc-muted"><span class="counter" data-target="15" data-start="0" data-format="decimal">0</span></span>
+          <h4 class="scorecard-title">DIFFERENTIAL METRICS</h4>
+          <div class="scorecard-grid">
+            <div class="scorecard-metric">
+              <span class="scorecard-metric-label">Fault Tolerance</span>
+              <span class="scorecard-metric-value sc-green"><span class="counter" data-target="67" data-start="0" data-format="decimal">0</span></span>
+            </div>
+            <div class="scorecard-metric">
+              <span class="scorecard-metric-label">Critical Time</span>
+              <span class="scorecard-metric-value sc-muted"><span class="counter" data-target="23" data-start="0" data-format="decimal">0</span></span>
+            </div>
+            <div class="scorecard-metric">
+              <span class="scorecard-metric-label">ITAE</span>
+              <span class="scorecard-metric-value sc-orange"><span class="counter" data-target="20133" data-start="0" data-format="integer">0</span></span>
+            </div>
+            <div class="scorecard-metric">
+              <span class="scorecard-metric-label">Attack Rate</span>
+              <span class="scorecard-metric-value sc-blue"><span class="counter" data-target="46" data-start="0" data-format="decimal">0</span></span>
+            </div>
+            <div class="scorecard-metric">
+              <span class="scorecard-metric-label">Cascade Depth</span>
+              <span class="scorecard-metric-value sc-muted"><span class="counter" data-target="0" data-start="0" data-format="decimal">0</span></span>
+            </div>
+            <div class="scorecard-metric">
+              <span class="scorecard-metric-label">Rapidity</span>
+              <span class="scorecard-metric-value sc-green"><span class="counter" data-target="8" data-start="0" data-format="integer">0</span> t</span>
+            </div>
           </div>
         </div>
       </div>
@@ -108,12 +118,12 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
         <div class="cascade-layout">
           <div class="cascade-text fade-in-up">
             <span class="section-label">CASCADE PROPAGATION</span>
-            <h2 class="cascade-title">One fault. Twenty-three agents <em>affected.</em></h2>
+            <h2 class="cascade-title">One fault. A chain of agents <em>affected.</em></h2>
             <p class="cascade-desc">
-              When an agent dies, it becomes a permanent obstacle. Agents behind
-              it replan, but their new paths block others, who block others still.
-              MAFIS traces this chain reaction and measures how deep and wide
-              the damage spreads.
+              When an agent dies it becomes a permanent obstacle. Agents behind
+              it replan, their new paths block others, and the ripple keeps
+              spreading. MAFIS traces the chain and measures how deep and
+              wide the damage goes.
             </p>
           </div>
 
@@ -132,7 +142,7 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
       <div class="section-inner" style="position: relative; z-index: 1;">
         <div class="instrument-header fade-in-up" id="instrument-header">
           <span class="section-label">THE INSTRUMENT</span>
-          <h2 class="instrument-title">Seven solvers. Four fault types. Six topologies. One <em>observatory.</em></h2>
+          <h2 class="instrument-title">Four design choices. One <em>observatory.</em></h2>
           <p class="instrument-desc">
             MAFIS controls the variables that matter for fault resilience
             research. Configure a scenario, inject faults, and compare the results
@@ -594,7 +604,7 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
 
     /* Scorecard */
     .scorecard {
-      max-width: 420px;
+      max-width: 640px;
       margin: 0 auto;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -610,15 +620,30 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
       opacity: 0.5;
       margin-bottom: 16px;
     }
+    .scorecard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 28px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
     .scorecard-metric {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 24px;
       padding: 10px 0;
-      border-top: 1px solid var(--border);
     }
-    .scorecard-metric:last-child {
-      border-bottom: 1px solid var(--border);
+    .scorecard-metric-label {
+      flex-shrink: 1;
+      min-width: 0;
+    }
+    .scorecard-metric-value {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .scorecard-grid > .scorecard-metric:nth-child(n+3) {
+      border-top: 1px solid var(--border);
     }
     .scorecard-metric-label {
       font-family: var(--mono);
@@ -1037,6 +1062,8 @@ import InstrumentPanel from '../components/InstrumentPanel.jsx';
       .observatory-timeline { min-height: 180px; margin-bottom: 28px; }
       .scorecard { padding: 24px 20px; }
       .scorecard-title { margin-bottom: 16px; }
+      .scorecard-grid { grid-template-columns: 1fr; column-gap: 0; }
+      .scorecard-grid > .scorecard-metric:nth-child(n+2) { border-top: 1px solid var(--border); }
       .scorecard-metric { padding: 12px 0; }
       .scorecard-metric-label { font-size: 11px; letter-spacing: 0.1em; }
       .scorecard-metric-value { font-size: 14px; }

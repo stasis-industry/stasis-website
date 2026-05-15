@@ -19,7 +19,7 @@ Triggered when an agent's accumulated operational wear reaches its pre-sampled W
 
 ### Breakdown
 
-A permanent death fault with the same consequences as Overheat — the agent dies and becomes a permanent obstacle. The distinction is in the trigger: Breakdown is used for scheduled burst events (e.g., "kill 20% of agents at tick 100"), while Overheat arises from the continuous Weibull wear model. Both produce identical cascade consequences.
+A permanent death fault with the same consequences as Overheat. The agent dies and becomes a permanent obstacle. The distinction is in the trigger. Breakdown fires for scheduled burst events (e.g., "kill 20% of agents at tick 100"), while Overheat arises from the continuous Weibull wear model. Both produce identical cascade consequences.
 
 > [!WARNING] Overheat and Breakdown are **permanent**. The agent dies and its cell becomes an obstacle for the remainder of the simulation. Plan your fault intensity accordingly.
 
@@ -52,7 +52,7 @@ The continuous Weibull wear model. Each agent has a pre-sampled failure time. As
 
 ### ZoneOutage
 
-Injects latency on all agents currently within a randomly-selected vertical strip of the map for N ticks. The strip is chosen using the simulation's seeded RNG at fault-fire time — deterministic per seed and independent of solver routing behavior. Agents freeze temporarily but recover. Models a localized network dead zone or power failure in a specific warehouse aisle section.
+Injects latency on all agents currently within a randomly-selected vertical strip of the map for N ticks. The strip is chosen using the simulation's seeded RNG at fault-fire time, so the same seed always picks the same strip and the solver's routing behavior does not affect it. Agents freeze temporarily but recover. Models a localized network dead zone or power failure in a specific warehouse aisle section.
 
 Parameters:
 - `zone_at_tick`: when the outage fires
@@ -85,8 +85,8 @@ Fault generation is controlled by `FaultConfig`:
 | Parameter | Effect |
 |---|---|
 | `weibull_enabled` | Enable Weibull wear model (continuous agent death) |
-| `weibull_beta` | Shape parameter — higher = more clustered failures |
-| `weibull_eta` | Scale parameter — higher = longer average lifespan |
+| `weibull_beta` | Shape parameter. Higher means more clustered failures |
+| `weibull_eta` | Scale parameter. Higher means longer average lifespan |
 | `intermittent_enabled` | Enable intermittent latency faults |
 | `intermittent_mtbf_ticks` | Average ticks between latency episodes per agent |
 | `intermittent_recovery_ticks` | Duration of each latency episode |

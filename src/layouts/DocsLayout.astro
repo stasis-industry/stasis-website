@@ -58,6 +58,14 @@ const navGroups = [
       { label: 'Tick Rewind', slug: 'researchers/scenarios/deterministic-replays' },
     ]
   },
+  {
+    title: 'Experiments',
+    items: [
+      { label: 'Topology & Density', slug: 'researchers/experiments/topology-density' },
+      { label: 'Scheduler Effect', slug: 'researchers/experiments/scheduler-effect' },
+      { label: 'Reproducing Results', slug: 'researchers/experiments/reproduction' },
+    ]
+  },
 ];
 
 const flatItems = navGroups.filter(g => !g.isSectionHeader).flatMap(g => g.items);

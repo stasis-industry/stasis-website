@@ -17,7 +17,7 @@ Different solvers, fault types, and topologies produce different degradation and
 
 | Variable | Options |
 |---|---|
-| **Solver** | PIBT, RHCR (PBS, PIBT-Window, Priority A*), Token Passing, TPTS, RT-LaCAM |
+| **Solver** | PIBT, RHCR-PBS, Token Passing |
 | **Fault type** | Burst, Wear-based (Weibull), Spatial zone outage, Intermittent |
 | **Grid topology** | Warehouse Medium, Warehouse Large, Compact Grid, Kiva Warehouse, Sorting Center, Fulfillment Center |
 | **Agent density** | Configurable (up to 1,000 agents in WASM, 5,000 native) |
@@ -25,17 +25,31 @@ Different solvers, fault types, and topologies produce different degradation and
 
 MAFIS is built to study how solver architecture, fault type, and topology interact under sustained fault conditions.
 
-## Resilience Scorecard
+## Resilience Scorecard (Live Observatory)
 
-Every fault injection run produces a four-metric **Resilience Scorecard**:
+Interactive MAFIS sessions display a real-time **Resilience Scorecard** with four indicators:
 
-- **Fault Tolerance** — throughput retained under faults
+- **Fault Tolerance (FT)** — throughput retained under faults
 - **NRR** — operational uptime ratio, recovery speed vs fault frequency (requires recurring faults)
 - **Survival Rate** — fraction of the initial fleet still alive after faults
-- **Critical Time** — fraction of time spent in a critically degraded state
-- **Cascade Depth / Spread** — how far fault effects propagate through the dependency graph
+- **Critical Time (CT)** — fraction of time spent in a critically degraded state
 
 See [Resilience Scorecard](/docs/researchers/observatory/resilience-scorecard) for formulas and examples.
+
+## Six Primary Experiment Metrics
+
+Batch experiment runs (headless, reproducible) report six differential metrics designed for cross-configuration comparison:
+
+| Metric | What it measures |
+|---|---|
+| **Fault Tolerance (FT)** | Throughput retention ratio vs fault-free baseline |
+| **Critical Time (CT)** | Fraction of post-fault ticks below 50% baseline |
+| **ITAE** | Time-weighted integral of throughput error — penalizes slow recovery |
+| **Attack Rate (AR)** | Fraction of fleet ever killed or cascade-affected by any fault |
+| **Cascade Depth** | Mean BFS depth on the ADG across all fault events |
+| **Rapidity** | Ticks to ≥90% baseline throughput for 5 consecutive ticks (recoverable faults only) |
+
+See [Fault Metrics](/docs/researchers/metrics/fault-metrics) for formulas, examples, and research origins.
 
 ## Two Versions
 

@@ -209,18 +209,24 @@ export default function CascadeScene() {
 
       ctx.clearRect(0, 0, gridPx, gridPx);
 
-      // Grid lines
-      ctx.strokeStyle = colors.gridLine;
+      // Grid lines with fade-out at endpoints (no hard border)
       ctx.lineWidth = 1;
-      for (let i = 0; i <= GRID_SIZE; i++) {
+      const drawFadingLine = (x0, y0, x1, y1) => {
+        const grad = ctx.createLinearGradient(x0, y0, x1, y1);
+        grad.addColorStop(0,    'rgba(0,0,0,0)');
+        grad.addColorStop(0.18, colors.gridLine);
+        grad.addColorStop(0.82, colors.gridLine);
+        grad.addColorStop(1,    'rgba(0,0,0,0)');
+        ctx.strokeStyle = grad;
         ctx.beginPath();
-        ctx.moveTo(i * cellPx, 0);
-        ctx.lineTo(i * cellPx, gridPx);
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
         ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, i * cellPx);
-        ctx.lineTo(gridPx, i * cellPx);
-        ctx.stroke();
+      };
+      // Skip the outermost lines (i=0 and i=GRID_SIZE) to remove the visible border
+      for (let i = 1; i < GRID_SIZE; i++) {
+        drawFadingLine(i * cellPx, 0, i * cellPx, gridPx);
+        drawFadingLine(0, i * cellPx, gridPx, i * cellPx);
       }
 
       // Agents
@@ -301,9 +307,8 @@ export default function CascadeScene() {
   return (
     <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
       <div style={{
-        background: 'var(--thesis-grid-bg, #E2DED8)',
-        border: '1px solid var(--thesis-grid-border, rgba(0,0,0,0.08))',
-        borderRadius: 8,
+        background: 'transparent',
+        border: 'none',
         overflow: 'hidden',
         width: '100%',
         maxWidth: maxGridPx,

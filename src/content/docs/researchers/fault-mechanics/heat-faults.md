@@ -37,7 +37,7 @@ Each tick, agents that move increment their `operational_age`. When `operational
 3. Cascade pipeline fires (ADG → BFS → replan)
 4. `FaultType::Overheat` event recorded
 
-> [!IMPORTANT] Wear detection is a simple deterministic comparison — no per-tick probability roll. This makes wear-based death fully reproducible from the seed.
+> [!IMPORTANT] Wear detection is a simple deterministic comparison. There is no per-tick probability roll. Wear-based death is fully reproducible from the seed.
 
 ## Heat (Visual Indicator)
 
@@ -54,7 +54,7 @@ Heat is displayed as a color gradient on agents in the 3D viewport: cool colors 
 
 ## Heatmap
 
-The heatmap is a spatial density grid updated each tick. It provides a real-time overlay in the 3D viewport showing congestion hot spots. Cells where agents frequently wait show high density; lightly trafficked cells show low density. The heatmap has two modes: density (decaying warm gradient) and traffic (cumulative blue).
+The heatmap is a spatial density grid updated each tick. It provides a real-time overlay in the 3D viewport showing congestion hot spots. Cells where agents frequently wait show high density. Lightly trafficked cells show low density. The heatmap has two modes: density (decaying warm gradient) and traffic (cumulative blue).
 
 ## Configuration
 
